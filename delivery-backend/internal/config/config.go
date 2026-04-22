@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -35,7 +36,7 @@ type Config struct {
 }
 
 func Load() Config {
-	_ = godotenv.Load()
+	loadEnvFiles()
 
 	return Config{
 		Port:                            getEnv("PORT", "8080"),
@@ -60,6 +61,17 @@ func Load() Config {
 		TrackingTickSeconds:             getEnvAsInt("TRACKING_TICK_SECONDS", 8),
 		RateLimitRequests:               getEnvAsInt("RATE_LIMIT_REQUESTS", 120),
 		RateLimitWindowSeconds:          getEnvAsInt("RATE_LIMIT_WINDOW_SECONDS", 60),
+	}
+}
+
+func loadEnvFiles() {
+	for _, candidate := range []string{".env", "delivery-backend/.env"} {
+		if _, err := os.Stat(candidate); err == nil {
+			_ = godotenv.Load(candidate)
+			continue
+		} else if err != nil && !errors.Is(err, os.ErrNotExist) {
+			continue
+		}
 	}
 }
 

@@ -8,7 +8,7 @@
     "frontend:dev": "npm --prefix delivery-frontend run dev",
     "frontend:build": "npm --prefix delivery-frontend run build",
     "frontend:lint": "npm --prefix delivery-frontend run lint",
-    "backend:dev": "go run ./delivery-backend/cmd/api",
+    "backend:dev": "go -C delivery-backend run ./cmd/api",
     "backend:test": "go test ./delivery-backend/..."
   }
 }

@@ -18,7 +18,7 @@ trap cleanup EXIT INT TERM
 
 cd "$ROOT_DIR"
 
-go run ./delivery-backend/cmd/api &
+go -C "$ROOT_DIR/delivery-backend" run ./cmd/api &
 BACKEND_PID=$!
 
 npm --prefix delivery-frontend run dev &
