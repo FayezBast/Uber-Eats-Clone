@@ -16,35 +16,54 @@ import { formatCurrency, formatOrderTime } from "@/lib/format";
 import { apiClient } from "@/services/api/client";
 import { type Order } from "@/types";
 
+function replaceOrderById(source: Order[], nextOrder: Order) {
+  const targetIndex = source.findIndex((order) => order.id === nextOrder.id);
+
+  if (targetIndex === -1) {
+    return source;
+  }
+
+  const next = [...source];
+  next[targetIndex] = nextOrder;
+  return next;
+}
+
 export default function OrdersPage() {
   const user = useAuthStore((state) => state.user);
   const hydrated = useAuthStore((state) => state.hydrated);
+  const userId = user?.id;
+  const userRole = user?.role;
+  const canViewOrders = userRole === "customer" || userRole === "admin";
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [trackingError, setTrackingError] = useState("");
 
   useEffect(() => {
     if (!hydrated) {
       return;
     }
 
-    if (!user) {
+    if (!userId || !userRole) {
       setOrders([]);
       setLoading(false);
       setError("");
+      setTrackingError("");
       return;
     }
 
-    if (user.role !== "customer" && user.role !== "admin") {
+    if (!canViewOrders) {
       setOrders([]);
       setLoading(false);
       setError("");
+      setTrackingError("");
       return;
     }
 
     let mounted = true;
     setLoading(true);
     setError("");
+    setTrackingError("");
 
     apiClient
       .getOrders()
@@ -67,11 +86,57 @@ export default function OrdersPage() {
     return () => {
       mounted = false;
     };
-  }, [hydrated, user]);
+  }, [hydrated, canViewOrders, userId, userRole]);
 
   const activeOrder = orders.find((order) => order.status !== "delivered");
   const pastOrders = orders.filter((order) => order.status === "delivered");
   const totalSpend = pastOrders.reduce((sum, order) => sum + order.total, 0);
+
+  useEffect(() => {
+    if (!hydrated || !userId || !canViewOrders || !activeOrder?.id) {
+      setTrackingError("");
+      return;
+    }
+
+    let cancelled = false;
+
+    const refreshActiveOrder = async () => {
+      try {
+        const refreshedOrder = await apiClient.getOrder(activeOrder.id);
+        if (cancelled) {
+          return;
+        }
+
+        setOrders((current) => replaceOrderById(current, refreshedOrder));
+        setTrackingError("");
+      } catch (err) {
+        if (cancelled) {
+          return;
+        }
+
+        setTrackingError(
+          err instanceof Error ? err.message : "Unable to refresh live order tracking."
+        );
+      }
+    };
+
+    void refreshActiveOrder();
+
+    if (activeOrder.status === "delivered") {
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    const intervalId = window.setInterval(() => {
+      void refreshActiveOrder();
+    }, 10000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+    };
+  }, [hydrated, canViewOrders, userId, activeOrder?.id, activeOrder?.status]);
 
   return (
     <div className="container space-y-8 py-8 sm:py-10">
@@ -149,7 +214,7 @@ export default function OrdersPage() {
           {activeOrder ? (
             <div className="space-y-4">
               <h2 className="font-display text-3xl">Active order</h2>
-              <OrderTracker order={activeOrder} />
+              <OrderTracker order={activeOrder} trackingError={trackingError} />
             </div>
           ) : (
             <Card className="bg-white/82">

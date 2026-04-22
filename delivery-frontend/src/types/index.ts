@@ -169,6 +169,8 @@ export interface Order {
   address: Address;
   paymentLabel: string;
   timeline: TimelineEvent[];
+  delivery?: DeliveryRecord;
+  tracking?: TrackingSnapshot;
 }
 
 export interface DeliveryActor {

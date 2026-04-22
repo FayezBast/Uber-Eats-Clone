@@ -677,7 +677,9 @@ function mapBackendOrder(order: BackendOrderResponse): Order {
     deliveryMode: "delivery",
     address: parseAddress(order.delivery_address),
     paymentLabel: "Card on file",
-    timeline: buildOrderTimeline(order)
+    timeline: buildOrderTimeline(order),
+    delivery: order.delivery ? mapDeliveryRecord(order.delivery) : undefined,
+    tracking: order.tracking ? mapTrackingSnapshot(order.tracking) : undefined
   };
 }
 
@@ -698,6 +700,17 @@ async function mockGetRestaurantById(restaurantId: string) {
 async function mockGetOrders() {
   await delay();
   return orders;
+}
+
+async function mockGetOrder(orderId: string) {
+  await delay(180);
+
+  const order = orders.find((entry) => entry.id === orderId);
+  if (!order) {
+    throw new ApiError("Order not found.", 404);
+  }
+
+  return order;
 }
 
 async function withPublicFallback<T>(loader: () => Promise<T>, fallback: () => Promise<T>) {
@@ -819,6 +832,15 @@ export const apiClient = {
 
     const response = await request<BackendOrderListResponse>("/orders");
     return response.orders.map(mapBackendOrder);
+  },
+
+  async getOrder(orderId: string) {
+    if (USE_MOCK_API) {
+      return mockGetOrder(orderId);
+    }
+
+    const response = await request<{ order: BackendOrderResponse }>(`/orders/${orderId}`);
+    return mapBackendOrder(response.order);
   },
 
   async saveCart(payload: CheckoutPayload) {

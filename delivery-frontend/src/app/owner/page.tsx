@@ -4,19 +4,27 @@ import Link from "next/link";
 import { type ChangeEvent, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import {
   type LucideIcon,
+  ArrowUpRight,
+  BellRing,
   Camera,
+  ChefHat,
   ChartColumn,
+  ClipboardList,
+  Clock3,
   CircleDollarSign,
   ImagePlus,
   Layers3,
+  MessageSquare,
   Plus,
+  Receipt,
   Sparkles,
   Star,
   Store,
   Trash2,
   TrendingUp,
-  UtensilsCrossed,
-  Users
+  TriangleAlert,
+  Users,
+  Wallet
 } from "lucide-react";
 
 import { MockImage } from "@/components/common/mock-image";
@@ -36,6 +44,8 @@ import type { AppRole, ImageTheme, MenuItem, Restaurant } from "@/types";
 
 type OwnerItemStatus = "live" | "draft" | "sold_out";
 type PhotoCategory = "cover" | "dish" | "ambience";
+type ServiceTicketStatus = "new" | "preparing" | "ready" | "pickup";
+type OwnerActionPriority = "good" | "watch" | "urgent";
 
 interface OwnerMenuItem extends MenuItem {
   status: OwnerItemStatus;
@@ -64,6 +74,31 @@ interface InsightMetric {
   label: string;
   value: string;
   footnote: string;
+  icon: LucideIcon;
+}
+
+interface ServiceTicket {
+  id: string;
+  guest: string;
+  channel: "Delivery" | "Pickup";
+  items: string[];
+  promisedAt: string;
+  total: number;
+  status: ServiceTicketStatus;
+  note: string;
+}
+
+interface RevenueDay {
+  label: string;
+  revenue: number;
+  orders: number;
+}
+
+interface OwnerActionItem {
+  title: string;
+  description: string;
+  cta: string;
+  priority: OwnerActionPriority;
   icon: LucideIcon;
 }
 
@@ -151,6 +186,30 @@ function itemStatusVariant(status: OwnerItemStatus) {
       return "outline" as const;
     default:
       return "secondary" as const;
+  }
+}
+
+function serviceTicketVariant(status: ServiceTicketStatus) {
+  switch (status) {
+    case "new":
+      return "outline" as const;
+    case "preparing":
+      return "default" as const;
+    case "ready":
+      return "success" as const;
+    default:
+      return "secondary" as const;
+  }
+}
+
+function ownerActionVariant(priority: OwnerActionPriority) {
+  switch (priority) {
+    case "good":
+      return "success" as const;
+    case "watch":
+      return "outline" as const;
+    default:
+      return "default" as const;
   }
 }
 
@@ -268,13 +327,22 @@ export default function OwnerPage() {
 
   const coverPhoto = gallery.find((photo) => photo.category === "cover") ?? gallery[0];
   const liveItems = flatItems.filter((item) => item.status === "live");
+  const draftItems = flatItems.filter((item) => item.status === "draft");
   const soldOutItems = flatItems.filter((item) => item.status === "sold_out");
   const itemsWithPhotos = flatItems.filter((item) => gallery.some((photo) => photo.id === item.photoId));
   const photoCoverage = flatItems.length ? Math.round((itemsWithPhotos.length / flatItems.length) * 100) : 0;
   const ordersToday = 54 + liveItems.length * 9;
   const weeklyRevenue = 8200 + liveItems.length * 735 + gallery.length * 85;
+  const todayRevenue = Math.round(weeklyRevenue * 0.23);
+  const ordersInFlight = Math.max(6, Math.round(ordersToday * 0.17));
+  const averageOrderValue = weeklyRevenue / Math.max(1, ordersToday);
+  const payoutPending = Math.round(weeklyRevenue * 0.18);
   const repeatGuests = 31 + Math.min(18, gallery.length + liveItems.length);
-  const conversionRate = 9.4 + liveItems.length * 0.35;
+  const averagePrepTime = Math.round(
+    flatItems.reduce((sum, item) => sum + item.prepTimeMinutes, 0) / Math.max(1, flatItems.length)
+  );
+  const readyForHandoff = Math.max(1, Math.round(ordersInFlight / 3));
+  const estimatedMissedRevenue = soldOutItems.reduce((sum, item) => sum + item.price * 8, 0);
 
   const topItems = flatItems
     .filter((item) => item.status !== "draft")
@@ -286,30 +354,142 @@ export default function OwnerPage() {
       delta: performanceOffsets[index] ?? "+6%"
     }));
 
-  const insightMetrics: InsightMetric[] = [
+  const serviceTickets: ServiceTicket[] = [
     {
-      label: "Weekly sales",
-      value: formatCurrency(weeklyRevenue),
-      footnote: `${ordersToday} orders expected today with dinner service pacing above last week.`,
-      icon: CircleDollarSign
+      id: "ORD-4812",
+      guest: "Maya H.",
+      channel: "Delivery",
+      items: [liveItems[0]?.name ?? "Mixed grill platter", liveItems[1]?.name ?? "Crispy potatoes"],
+      promisedAt: "6:18 PM",
+      total: (liveItems[0]?.price ?? 18) + (liveItems[1]?.price ?? 8),
+      status: "preparing",
+      note: "Extra garlic sauce on the side."
     },
     {
-      label: "Guest traffic",
+      id: "ORD-4815",
+      guest: "Karim B.",
+      channel: "Pickup",
+      items: [liveItems[2]?.name ?? "Chicken shawarma wrap", liveItems[3]?.name ?? "Mint lemonade"],
+      promisedAt: "6:24 PM",
+      total: (liveItems[2]?.price ?? 13) + (liveItems[3]?.price ?? 5),
+      status: "ready",
+      note: "Guest is five minutes away."
+    },
+    {
+      id: "ORD-4819",
+      guest: "Lina S.",
+      channel: "Delivery",
+      items: [liveItems[4]?.name ?? "Family mezze box", liveItems[0]?.name ?? "House flatbread"],
+      promisedAt: "6:31 PM",
+      total: (liveItems[4]?.price ?? 24) + (liveItems[0]?.price ?? 18),
+      status: "new",
+      note: "Courier requested sealed drinks."
+    },
+    {
+      id: "ORD-4821",
+      guest: "Tarek A.",
+      channel: "Pickup",
+      items: [liveItems[1]?.name ?? "Charred halloumi bowl"],
+      promisedAt: "6:37 PM",
+      total: (liveItems[1]?.price ?? 11) * 2,
+      status: "pickup",
+      note: "Keep hot at the pickup shelf."
+    }
+  ];
+
+  const revenueSeries: RevenueDay[] = [
+    { label: "Mon", revenue: Math.round(weeklyRevenue * 0.11), orders: 34 },
+    { label: "Tue", revenue: Math.round(weeklyRevenue * 0.12), orders: 38 },
+    { label: "Wed", revenue: Math.round(weeklyRevenue * 0.13), orders: 41 },
+    { label: "Thu", revenue: Math.round(weeklyRevenue * 0.14), orders: 46 },
+    { label: "Fri", revenue: Math.round(weeklyRevenue * 0.16), orders: 54 },
+    { label: "Sat", revenue: Math.round(weeklyRevenue * 0.18), orders: 59 },
+    { label: "Sun", revenue: Math.round(weeklyRevenue * 0.16), orders: 51 }
+  ];
+
+  const strongestRevenueDay = revenueSeries.reduce((best, day) =>
+    day.revenue > best.revenue ? day : best
+  );
+
+  const ownerActionItems: OwnerActionItem[] = [
+    {
+      title: soldOutItems.length ? "Restock sold-out menu items" : "Inventory is stable",
+      description: soldOutItems.length
+        ? `${soldOutItems.length} live item${soldOutItems.length === 1 ? "" : "s"} are hidden from the app and are likely costing dinner conversions.`
+        : "No sold-out dishes are blocking the live storefront right now.",
+      cta: soldOutItems.length ? "Update menu availability before the evening rush." : "Keep an eye on the dinner rush.",
+      priority: soldOutItems.length ? "urgent" : "good",
+      icon: TriangleAlert
+    },
+    {
+      title: draftItems.length ? "Finish unpublished dishes" : "Menu publishing is current",
+      description: draftItems.length
+        ? `${draftItems.length} draft item${draftItems.length === 1 ? "" : "s"} still need pricing, copy, or approval before going live.`
+        : "Every dish created so far is already visible to customers.",
+      cta: draftItems.length ? "Complete descriptions and push the strongest item live." : "Use the menu editor for seasonal changes instead.",
+      priority: draftItems.length ? "watch" : "good",
+      icon: ClipboardList
+    },
+    {
+      title: photoCoverage < 90 ? "Improve photo coverage" : "Visual storefront looks strong",
+      description:
+        photoCoverage < 90
+          ? `${100 - photoCoverage}% of the menu still falls back to house art. Real photography usually lifts first-order clicks.`
+          : "Best sellers and hero assets already have enough real visuals to support discovery.",
+      cta:
+        photoCoverage < 90
+          ? "Assign gallery photos to top movers first."
+          : "Refresh the cover image before the weekend campaign.",
+      priority: photoCoverage < 90 ? "watch" : "good",
+      icon: Camera
+    }
+  ];
+
+  const growthHighlights = [
+    {
+      label: "Average rating",
+      value: ownerRestaurant.rating.toFixed(1),
+      detail: `${ownerRestaurant.reviewCount} public reviews in the app.`,
+      icon: Star
+    },
+    {
+      label: "Repeat guests",
       value: `${repeatGuests}%`,
-      footnote: "Estimated repeat-customer mix based on recent reorder behavior and menu depth.",
+      detail: "Reorders are strongest between 7 PM and close.",
       icon: Users
     },
     {
-      label: "Menu health",
-      value: `${liveItems.length}/${flatItems.length}`,
-      footnote: `${soldOutItems.length} item${soldOutItems.length === 1 ? "" : "s"} are marked sold out right now.`,
-      icon: UtensilsCrossed
+      label: "Reply coverage",
+      value: `${Math.min(96, 78 + gallery.length)}%`,
+      detail: "Most new reviews have been answered within the same day.",
+      icon: MessageSquare
+    }
+  ];
+
+  const insightMetrics: InsightMetric[] = [
+    {
+      label: "Revenue today",
+      value: formatCurrency(todayRevenue),
+      footnote: `${ordersInFlight} orders are currently in motion across delivery and pickup.`,
+      icon: CircleDollarSign
     },
     {
-      label: "Photo coverage",
-      value: `${photoCoverage}%`,
-      footnote: `${gallery.length} visual assets are available for the storefront, menu, and pickup view.`,
-      icon: Camera
+      label: "Weekly sales",
+      value: formatCurrency(weeklyRevenue),
+      footnote: `${ordersToday} orders expected today with dinner pacing ahead of last week.`,
+      icon: TrendingUp
+    },
+    {
+      label: "Orders in progress",
+      value: String(ordersInFlight),
+      footnote: `${readyForHandoff} order${readyForHandoff === 1 ? "" : "s"} should be ready to hand off in the next few minutes.`,
+      icon: ChefHat
+    },
+    {
+      label: "Payout pending",
+      value: formatCurrency(payoutPending),
+      footnote: `Average ticket is ${formatCurrency(averageOrderValue)} with ${photoCoverage}% of the menu visually covered.`,
+      icon: Wallet
     }
   ];
 
@@ -515,24 +695,40 @@ export default function OwnerPage() {
           <div className="space-y-6">
             <Badge className="w-fit gap-2">
               <Store className="h-3.5 w-3.5" />
-              Restaurant studio
+              Restaurant owner workspace
             </Badge>
             <div className="space-y-4">
               <h1 className="balance-text max-w-4xl font-display text-5xl text-foreground sm:text-6xl">
-                Run your menu, photos, and storefront performance from one owner dashboard.
+                Control your storefront, menu, and live service from one restaurant dashboard.
               </h1>
               <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-                Adjust what guests see in the app, keep items in stock, and watch the signals that move repeat orders.
+                Update dishes, watch prep flow, manage visuals, and track revenue without leaving the owner panel.
               </p>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               <div className="stat-pill min-w-[150px]">
                 <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-                  Conversion
+                  Revenue today
                 </p>
                 <p className="mt-2 text-lg font-semibold text-foreground">
-                  {conversionRate.toFixed(1)}%
+                  {formatCurrency(todayRevenue)}
+                </p>
+              </div>
+              <div className="stat-pill min-w-[150px]">
+                <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+                  Orders live
+                </p>
+                <p className="mt-2 text-lg font-semibold text-foreground">
+                  {ordersInFlight}
+                </p>
+              </div>
+              <div className="stat-pill min-w-[150px]">
+                <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+                  Average ticket
+                </p>
+                <p className="mt-2 text-lg font-semibold text-foreground">
+                  {formatCurrency(averageOrderValue)}
                 </p>
               </div>
               <div className="stat-pill min-w-[150px]">
@@ -543,20 +739,18 @@ export default function OwnerPage() {
                   {formatOrderTime(lastSavedAt)}
                 </p>
               </div>
-              <div className="stat-pill min-w-[150px]">
-                <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-                  Menu status
-                </p>
-                <p className="mt-2 text-lg font-semibold text-foreground">
-                  {isOpenForOrders ? "Open" : "Paused"}
-                </p>
-              </div>
             </div>
 
             <div className="flex flex-wrap gap-3">
               <Button onClick={handleSaveChanges}>
                 {saveState === "saving" ? "Saving..." : saveState === "saved" ? "Saved" : "Save changes"}
                 <Sparkles className="h-4 w-4" />
+              </Button>
+              <Button asChild variant="outline">
+                <Link href={`/restaurants/${ownerRestaurant.id}`}>
+                  Preview storefront
+                  <ArrowUpRight className="h-4 w-4" />
+                </Link>
               </Button>
               <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
                 <ImagePlus className="h-4 w-4" />
@@ -569,14 +763,46 @@ export default function OwnerPage() {
             </div>
           </div>
 
-          <PhotoSurface
-            photo={coverPhoto}
-            fallbackTitle={restaurantName}
-            fallbackSubtitle={heroTagline}
-            fallbackTheme={ownerRestaurant.imageTheme}
-            className="min-h-[360px] p-6"
-            badgeLabel={isOpenForOrders ? "Accepting orders" : "Paused in app"}
-          />
+          <div className="grid gap-4">
+            <PhotoSurface
+              photo={coverPhoto}
+              fallbackTitle={restaurantName}
+              fallbackSubtitle={heroTagline}
+              fallbackTheme={ownerRestaurant.imageTheme}
+              className="min-h-[320px] p-6"
+              badgeLabel={isOpenForOrders ? `${ordersInFlight} live orders` : "Paused in app"}
+            />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="frost-panel p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                    Service mode
+                  </p>
+                  <BellRing className="h-4 w-4 text-primary" />
+                </div>
+                <p className="mt-2 text-2xl font-semibold text-foreground">
+                  {isOpenForOrders ? "Open for orders" : "Orders paused"}
+                </p>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  Pickup is {pickupEnabled ? "visible" : "hidden"} and average prep is {averagePrepTime} minutes.
+                </p>
+              </div>
+              <div className="frost-panel p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                    Next payout
+                  </p>
+                  <Wallet className="h-4 w-4 text-primary" />
+                </div>
+                <p className="mt-2 text-2xl font-semibold text-foreground">
+                  {formatCurrency(payoutPending)}
+                </p>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  Estimated arrival {formatOrderTime("2026-04-23T12:00:00Z")} based on current settlement timing.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -592,6 +818,232 @@ export default function OwnerPage() {
             {insightMetrics.map((metric) => (
               <InsightCard key={metric.label} {...metric} />
             ))}
+          </div>
+
+          <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+            <Card className="overflow-hidden bg-white/88">
+              <CardHeader className="border-b border-border/70 bg-surface/35">
+                <CardTitle>Live service board</CardTitle>
+                <CardDescription>
+                  Track the active kitchen queue, handoff timing, and pickup readiness from one place.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4 pt-6">
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="frost-panel p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                        Orders in progress
+                      </p>
+                      <ChefHat className="h-4 w-4 text-primary" />
+                    </div>
+                    <p className="mt-2 text-2xl font-semibold text-foreground">{ordersInFlight}</p>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      Across delivery and pickup workflows right now.
+                    </p>
+                  </div>
+                  <div className="frost-panel p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                        Ready soon
+                      </p>
+                      <Clock3 className="h-4 w-4 text-primary" />
+                    </div>
+                    <p className="mt-2 text-2xl font-semibold text-foreground">{readyForHandoff}</p>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      Orders expected to hand off in the next few minutes.
+                    </p>
+                  </div>
+                  <div className="frost-panel p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                        Average prep
+                      </p>
+                      <BellRing className="h-4 w-4 text-primary" />
+                    </div>
+                    <p className="mt-2 text-2xl font-semibold text-foreground">{averagePrepTime} min</p>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      Based on the current live catalog and queue mix.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  {serviceTickets.map((ticket) => (
+                    <div key={ticket.id} className="frost-panel space-y-3 p-4">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="space-y-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="font-semibold text-foreground">{ticket.id}</p>
+                            <Badge variant="outline">{ticket.channel}</Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground">{ticket.guest}</p>
+                        </div>
+                        <div className="flex flex-col items-start gap-2 text-left sm:items-end sm:text-right">
+                          <Badge variant={serviceTicketVariant(ticket.status)}>
+                            {formatStatusLabel(ticket.status)}
+                          </Badge>
+                          <p className="text-sm font-semibold text-foreground">{ticket.promisedAt}</p>
+                        </div>
+                      </div>
+                      <p className="text-sm leading-6 text-muted-foreground">
+                        {ticket.items.join(" • ")}
+                      </p>
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <p className="text-sm text-muted-foreground">{ticket.note}</p>
+                        <p className="font-semibold text-foreground">{formatCurrency(ticket.total)}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="grid gap-6">
+              <Card className="overflow-hidden bg-white/88">
+                <CardHeader className="border-b border-border/70 bg-surface/35">
+                  <CardTitle>Revenue pulse</CardTitle>
+                  <CardDescription>
+                    A week view of net sales pacing, average ticket size, and expected payout flow.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6 pt-6">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="frost-panel p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                          Net sales today
+                        </p>
+                        <CircleDollarSign className="h-4 w-4 text-primary" />
+                      </div>
+                      <p className="mt-2 text-3xl font-semibold text-foreground">
+                        {formatCurrency(todayRevenue)}
+                      </p>
+                      <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                        Current average ticket is {formatCurrency(averageOrderValue)}.
+                      </p>
+                    </div>
+                    <div className="frost-panel p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                          Pending payout
+                        </p>
+                        <Wallet className="h-4 w-4 text-primary" />
+                      </div>
+                      <p className="mt-2 text-3xl font-semibold text-foreground">
+                        {formatCurrency(payoutPending)}
+                      </p>
+                      <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                        Expected on {formatOrderTime("2026-04-23T12:00:00Z")} if settlement timing holds.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid h-[220px] grid-cols-7 items-end gap-3">
+                    {revenueSeries.map((day) => (
+                      <div key={day.label} className="flex flex-col items-center gap-3">
+                        <div className="flex h-[180px] w-full items-end rounded-[24px] bg-secondary/60 p-2">
+                          <div
+                            className="w-full rounded-[18px] bg-gradient-to-t from-success via-accent to-highlight"
+                            style={{ height: `${Math.max(26, Math.round((day.revenue / strongestRevenueDay.revenue) * 100))}%` }}
+                          />
+                        </div>
+                        <div className="text-center">
+                          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                            {day.label}
+                          </p>
+                          <p className="mt-1 text-xs text-muted-foreground">{day.orders} orders</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="frost-panel flex items-start gap-3 p-4">
+                    <Receipt className="mt-0.5 h-4 w-4 text-primary" />
+                    <p className="text-sm leading-6 text-muted-foreground">
+                      {strongestRevenueDay.label} is pacing highest this week, with dinner bundles and
+                      featured items driving the strongest average ticket.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="overflow-hidden bg-white/88">
+                <CardHeader className="border-b border-border/70 bg-surface/35">
+                  <CardTitle>Owner action board</CardTitle>
+                  <CardDescription>
+                    The highest-value fixes before the next service window starts.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3 pt-6">
+                  {ownerActionItems.map((item) => {
+                    const Icon = item.icon;
+
+                    return (
+                      <div key={item.title} className="frost-panel p-4">
+                        <div className="flex items-start gap-3">
+                          <div className="rounded-2xl bg-primary/12 p-3 text-primary">
+                            <Icon className="h-4 w-4" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="font-semibold text-foreground">{item.title}</p>
+                              <Badge variant={ownerActionVariant(item.priority)}>
+                                {formatStatusLabel(item.priority)}
+                              </Badge>
+                            </div>
+                            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                              {item.description}
+                            </p>
+                            <p className="mt-3 text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                              {item.cta}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  <div className="frost-panel flex items-start gap-3 p-4">
+                    <TriangleAlert className="mt-0.5 h-4 w-4 text-primary" />
+                    <p className="text-sm leading-6 text-muted-foreground">
+                      Estimated missed revenue from sold-out items this week:{" "}
+                      <span className="font-semibold text-foreground">
+                        {formatCurrency(estimatedMissedRevenue)}
+                      </span>
+                      .
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="overflow-hidden bg-white/88">
+                <CardHeader className="border-b border-border/70 bg-surface/35">
+                  <CardTitle>Growth levers</CardTitle>
+                  <CardDescription>
+                    Signals that help decide whether to push offers, respond to reviews, or feature more dishes.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="grid gap-3 pt-6 sm:grid-cols-3">
+                  {growthHighlights.map((item) => {
+                    const Icon = item.icon;
+
+                    return (
+                      <div key={item.label} className="frost-panel p-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                            {item.label}
+                          </p>
+                          <Icon className="h-4 w-4 text-primary" />
+                        </div>
+                        <p className="mt-2 text-2xl font-semibold text-foreground">{item.value}</p>
+                        <p className="mt-2 text-sm leading-6 text-muted-foreground">{item.detail}</p>
+                      </div>
+                    );
+                  })}
+                </CardContent>
+              </Card>
+            </div>
           </div>
 
           <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
