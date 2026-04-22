@@ -1,0 +1,14 @@
+{
+  "name": "uber",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "./scripts/dev.sh",
+    "frontend:install": "npm --prefix delivery-frontend install",
+    "frontend:dev": "npm --prefix delivery-frontend run dev",
+    "frontend:build": "npm --prefix delivery-frontend run build",
+    "frontend:lint": "npm --prefix delivery-frontend run lint",
+    "backend:dev": "go run ./delivery-backend/cmd/api",
+    "backend:test": "go test ./delivery-backend/..."
+  }
+}

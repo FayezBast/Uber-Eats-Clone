@@ -1,0 +1,14 @@
+{
+  "folders": [
+    {
+      "name": "delivery-backend",
+      "path": "delivery-backend"
+    }
+  ],
+  "settings": {
+    "go.useLanguageServer": true,
+    "go.toolsEnvVars": {
+      "GOWORK": "${workspaceFolder:delivery-backend}/../go.work"
+    }
+  }
+}

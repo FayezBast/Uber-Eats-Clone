@@ -1,0 +1,34 @@
+{
+  "go.toolsEnvVars": {
+    "GOWORK": "${workspaceFolder}/go.work"
+  },
+  "gopls": {
+    "directoryFilters": [
+      "-delivery-frontend/.next",
+      "-delivery-frontend/node_modules",
+      "-**/node_modules"
+    ]
+  },
+  "typescript.tsserver.experimental.enableProjectDiagnostics": false,
+  "eslint.workingDirectories": [
+    {
+      "directory": "delivery-frontend",
+      "changeProcessCWD": true
+    }
+  ],
+  "files.exclude": {
+    "**/.next": true,
+    "**/node_modules": true,
+    "**/tsconfig.tsbuildinfo": true
+  },
+  "search.exclude": {
+    "**/.next": true,
+    "**/node_modules": true,
+    "**/tsconfig.tsbuildinfo": true
+  },
+  "files.watcherExclude": {
+    "**/.next/**": true,
+    "**/node_modules/**": true,
+    "**/tsconfig.tsbuildinfo": true
+  }
+}

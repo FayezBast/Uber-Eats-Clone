@@ -1,0 +1,1265 @@
+"use client";
+
+import Link from "next/link";
+import { type ChangeEvent, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type LucideIcon,
+  Camera,
+  ChartColumn,
+  CircleDollarSign,
+  ImagePlus,
+  Layers3,
+  Plus,
+  Sparkles,
+  Star,
+  Store,
+  Trash2,
+  TrendingUp,
+  UtensilsCrossed,
+  Users
+} from "lucide-react";
+
+import { MockImage } from "@/components/common/mock-image";
+import { EmptyState } from "@/components/states/empty-state";
+import { SkeletonCard } from "@/components/states/skeleton-card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { formatCurrency, formatOrderTime, formatStatusLabel } from "@/lib/format";
+import { cn } from "@/lib/utils";
+import { restaurants } from "@/mocks/data";
+import { useAuthStore } from "@/store/auth-store";
+import type { AppRole, ImageTheme, MenuItem, Restaurant } from "@/types";
+
+type OwnerItemStatus = "live" | "draft" | "sold_out";
+type PhotoCategory = "cover" | "dish" | "ambience";
+
+interface OwnerMenuItem extends MenuItem {
+  status: OwnerItemStatus;
+  prepTimeMinutes: number;
+  photoId?: string;
+}
+
+interface OwnerMenuSection {
+  id: string;
+  title: string;
+  description: string;
+  items: OwnerMenuItem[];
+}
+
+interface RestaurantPhotoAsset {
+  id: string;
+  title: string;
+  caption: string;
+  theme: ImageTheme;
+  category: PhotoCategory;
+  addedAt: string;
+  url?: string;
+}
+
+interface InsightMetric {
+  label: string;
+  value: string;
+  footnote: string;
+  icon: LucideIcon;
+}
+
+const ownerRestaurant = restaurants[0];
+
+const busyHours = [
+  { label: "11 AM", value: 48 },
+  { label: "1 PM", value: 86 },
+  { label: "4 PM", value: 38 },
+  { label: "7 PM", value: 100 },
+  { label: "9 PM", value: 72 }
+];
+
+const performanceOffsets = ["+14%", "+11%", "+8%"];
+
+const selectFieldClassName =
+  "h-11 w-full rounded-full border border-border/80 bg-white/82 px-4 text-sm text-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+
+function resolveWorkspaceHref(role: AppRole) {
+  switch (role) {
+    case "driver":
+      return "/driver";
+    case "admin":
+      return "/admin";
+    case "owner":
+      return "/owner";
+    default:
+      return "/orders";
+  }
+}
+
+function createInitialGallery(restaurant: Restaurant): RestaurantPhotoAsset[] {
+  const menuPhotos = restaurant.menuSections.flatMap((section) =>
+    section.items.map((item, index) => ({
+      id: `photo-${item.id}`,
+      title: item.name,
+      caption: item.description,
+      theme: item.imageTheme ?? restaurant.imageTheme,
+      category: "dish" as const,
+      addedAt: `2026-04-${String(12 + index).padStart(2, "0")}T12:30:00Z`
+    }))
+  );
+
+  return [
+    {
+      id: `photo-${restaurant.id}-cover`,
+      title: `${restaurant.name} cover shot`,
+      caption: restaurant.heroTagline,
+      theme: restaurant.imageTheme,
+      category: "cover",
+      addedAt: "2026-04-18T09:20:00Z"
+    },
+    {
+      id: `photo-${restaurant.id}-dining-room`,
+      title: "Dining room lighting",
+      caption: "Warm ambient shot for the storefront hero and pickup section.",
+      theme: "night",
+      category: "ambience",
+      addedAt: "2026-04-17T18:45:00Z"
+    },
+    ...menuPhotos
+  ];
+}
+
+function createInitialSections(restaurant: Restaurant): OwnerMenuSection[] {
+  return restaurant.menuSections.map((section, sectionIndex) => ({
+    id: section.id,
+    title: section.title,
+    description: section.description,
+    items: section.items.map((item, itemIndex) => ({
+      ...item,
+      imageTheme: item.imageTheme ?? restaurant.imageTheme,
+      photoId: `photo-${item.id}`,
+      prepTimeMinutes: 8 + sectionIndex * 3 + itemIndex * 2,
+      status: item.popular || itemIndex === 0 ? "live" : itemIndex % 2 === 0 ? "draft" : "live"
+    }))
+  }));
+}
+
+function itemStatusVariant(status: OwnerItemStatus) {
+  switch (status) {
+    case "live":
+      return "success" as const;
+    case "draft":
+      return "outline" as const;
+    default:
+      return "secondary" as const;
+  }
+}
+
+function FieldLabel({ children }: { children: ReactNode }) {
+  return (
+    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+      {children}
+    </p>
+  );
+}
+
+function InsightCard({ label, value, footnote, icon: Icon }: InsightMetric) {
+  return (
+    <Card className="overflow-hidden bg-white/86">
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between gap-3">
+          <div className="rounded-2xl bg-primary/12 p-3 text-primary">
+            <Icon className="h-5 w-5" />
+          </div>
+          <Badge variant="outline">{label}</Badge>
+        </div>
+        <p className="mt-5 font-display text-4xl leading-none text-foreground">{value}</p>
+        <p className="mt-3 text-sm leading-6 text-muted-foreground">{footnote}</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+function PhotoSurface({
+  photo,
+  className,
+  fallbackTitle,
+  fallbackSubtitle,
+  fallbackTheme,
+  badgeLabel
+}: {
+  photo?: RestaurantPhotoAsset;
+  className?: string;
+  fallbackTitle: string;
+  fallbackSubtitle?: string;
+  fallbackTheme: ImageTheme;
+  badgeLabel?: string | null;
+}) {
+  if (photo?.url) {
+    return (
+      <div
+        aria-label={photo.title}
+        role="img"
+        className={cn(
+          "relative overflow-hidden rounded-[28px] border border-white/60 bg-cover bg-center bg-no-repeat shadow-float",
+          className
+        )}
+        style={{ backgroundImage: `url(${photo.url})` }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-t from-foreground/45 via-foreground/10 to-transparent" />
+        <div className="absolute left-5 top-5">
+          {badgeLabel ? <Badge variant="outline">{badgeLabel}</Badge> : null}
+        </div>
+        <div className="absolute inset-x-5 bottom-5">
+          <p className="font-display text-3xl leading-tight text-white">{photo.title}</p>
+          <p className="mt-1 max-w-lg text-sm text-white/85">{photo.caption}</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <MockImage
+      title={photo?.title ?? fallbackTitle}
+      subtitle={photo?.caption ?? fallbackSubtitle}
+      theme={photo?.theme ?? fallbackTheme}
+      className={className}
+      badgeLabel={badgeLabel ?? null}
+    />
+  );
+}
+
+export default function OwnerPage() {
+  const user = useAuthStore((state) => state.user);
+  const hydrated = useAuthStore((state) => state.hydrated);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const [restaurantName, setRestaurantName] = useState(ownerRestaurant.name);
+  const [heroTagline, setHeroTagline] = useState(ownerRestaurant.heroTagline);
+  const [shortDescription, setShortDescription] = useState(ownerRestaurant.shortDescription);
+  const [isOpenForOrders, setIsOpenForOrders] = useState(true);
+  const [pickupEnabled, setPickupEnabled] = useState(Boolean(ownerRestaurant.supportsPickup));
+  const [menuSections, setMenuSections] = useState<OwnerMenuSection[]>(() =>
+    createInitialSections(ownerRestaurant)
+  );
+  const [gallery, setGallery] = useState<RestaurantPhotoAsset[]>(() =>
+    createInitialGallery(ownerRestaurant)
+  );
+  const [photoTitle, setPhotoTitle] = useState("");
+  const [photoCaption, setPhotoCaption] = useState("");
+  const [photoUrl, setPhotoUrl] = useState("");
+  const [photoTheme, setPhotoTheme] = useState<ImageTheme>(ownerRestaurant.imageTheme);
+  const [photoCategory, setPhotoCategory] = useState<PhotoCategory>("dish");
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("saved");
+  const [lastSavedAt, setLastSavedAt] = useState("2026-04-20T09:15:00Z");
+
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const flatItems = useMemo(
+    () => menuSections.flatMap((section) => section.items.map((item) => ({ ...item, sectionTitle: section.title }))),
+    [menuSections]
+  );
+
+  const coverPhoto = gallery.find((photo) => photo.category === "cover") ?? gallery[0];
+  const liveItems = flatItems.filter((item) => item.status === "live");
+  const soldOutItems = flatItems.filter((item) => item.status === "sold_out");
+  const itemsWithPhotos = flatItems.filter((item) => gallery.some((photo) => photo.id === item.photoId));
+  const photoCoverage = flatItems.length ? Math.round((itemsWithPhotos.length / flatItems.length) * 100) : 0;
+  const ordersToday = 54 + liveItems.length * 9;
+  const weeklyRevenue = 8200 + liveItems.length * 735 + gallery.length * 85;
+  const repeatGuests = 31 + Math.min(18, gallery.length + liveItems.length);
+  const conversionRate = 9.4 + liveItems.length * 0.35;
+
+  const topItems = flatItems
+    .filter((item) => item.status !== "draft")
+    .slice(0, 3)
+    .map((item, index) => ({
+      ...item,
+      sales: 36 - index * 7 + liveItems.length * 2,
+      revenue: 640 - index * 88 + item.price * 28,
+      delta: performanceOffsets[index] ?? "+6%"
+    }));
+
+  const insightMetrics: InsightMetric[] = [
+    {
+      label: "Weekly sales",
+      value: formatCurrency(weeklyRevenue),
+      footnote: `${ordersToday} orders expected today with dinner service pacing above last week.`,
+      icon: CircleDollarSign
+    },
+    {
+      label: "Guest traffic",
+      value: `${repeatGuests}%`,
+      footnote: "Estimated repeat-customer mix based on recent reorder behavior and menu depth.",
+      icon: Users
+    },
+    {
+      label: "Menu health",
+      value: `${liveItems.length}/${flatItems.length}`,
+      footnote: `${soldOutItems.length} item${soldOutItems.length === 1 ? "" : "s"} are marked sold out right now.`,
+      icon: UtensilsCrossed
+    },
+    {
+      label: "Photo coverage",
+      value: `${photoCoverage}%`,
+      footnote: `${gallery.length} visual assets are available for the storefront, menu, and pickup view.`,
+      icon: Camera
+    }
+  ];
+
+  function markDirty() {
+    setSaveState("idle");
+  }
+
+  function handleSaveChanges() {
+    setSaveState("saving");
+
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    saveTimeoutRef.current = setTimeout(() => {
+      setLastSavedAt(new Date().toISOString());
+      setSaveState("saved");
+    }, 500);
+  }
+
+  function updateSection(sectionId: string, patch: Partial<Pick<OwnerMenuSection, "title" | "description">>) {
+    markDirty();
+    setMenuSections((current) =>
+      current.map((section) => (section.id === sectionId ? { ...section, ...patch } : section))
+    );
+  }
+
+  function updateItem(
+    sectionId: string,
+    itemId: string,
+    updater: (item: OwnerMenuItem) => OwnerMenuItem
+  ) {
+    markDirty();
+    setMenuSections((current) =>
+      current.map((section) =>
+        section.id === sectionId
+          ? {
+              ...section,
+              items: section.items.map((item) => (item.id === itemId ? updater(item) : item))
+            }
+          : section
+      )
+    );
+  }
+
+  function addMenuItem(sectionId: string) {
+    markDirty();
+    setMenuSections((current) =>
+      current.map((section) =>
+        section.id === sectionId
+          ? {
+              ...section,
+              items: [
+                ...section.items,
+                {
+                  id: `item-${Date.now()}`,
+                  restaurantId: ownerRestaurant.id,
+                  sectionId,
+                  name: "New menu item",
+                  description: "Add ingredients, portion notes, and what makes this item worth ordering.",
+                  price: 0,
+                  tags: ["New"],
+                  popular: false,
+                  imageTheme: ownerRestaurant.imageTheme,
+                  status: "draft",
+                  prepTimeMinutes: 12
+                }
+              ]
+            }
+          : section
+      )
+    );
+  }
+
+  function addSection() {
+    markDirty();
+    setMenuSections((current) => [
+      ...current,
+      {
+        id: `section-${Date.now()}`,
+        title: "New section",
+        description: "Describe the section before pushing it live.",
+        items: []
+      }
+    ]);
+  }
+
+  function addPhotoAsset(nextPhoto: RestaurantPhotoAsset) {
+    markDirty();
+    setGallery((current) => [nextPhoto, ...current]);
+  }
+
+  function handleAddPhotoByUrl() {
+    if (!photoUrl.trim()) {
+      return;
+    }
+
+    addPhotoAsset({
+      id: `photo-upload-${Date.now()}`,
+      title: photoTitle.trim() || "New gallery photo",
+      caption: photoCaption.trim() || "Fresh upload for the app storefront.",
+      url: photoUrl.trim(),
+      theme: photoTheme,
+      category: photoCategory,
+      addedAt: new Date().toISOString()
+    });
+    setPhotoTitle("");
+    setPhotoCaption("");
+    setPhotoUrl("");
+  }
+
+  function handleFileUpload(event: ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.target.files ?? []);
+
+    if (!files.length) {
+      return;
+    }
+
+    files.forEach((file, index) => {
+      addPhotoAsset({
+        id: `photo-file-${Date.now()}-${index}`,
+        title: file.name.replace(/\.[^/.]+$/, ""),
+        caption: "Uploaded from the local device for a storefront preview.",
+        url: URL.createObjectURL(file),
+        theme: photoTheme,
+        category: photoCategory,
+        addedAt: new Date().toISOString()
+      });
+    });
+
+    event.target.value = "";
+  }
+
+  function removePhoto(photoId: string) {
+    markDirty();
+    setGallery((current) => current.filter((photo) => photo.id !== photoId));
+    setMenuSections((current) =>
+      current.map((section) => ({
+        ...section,
+        items: section.items.map((item) =>
+          item.photoId === photoId ? { ...item, photoId: undefined } : item
+        )
+      }))
+    );
+  }
+
+  function setCoverPhoto(photoId: string) {
+    markDirty();
+    setGallery((current) =>
+      current.map((photo) => ({
+        ...photo,
+        category:
+          photo.id === photoId ? "cover" : photo.category === "cover" ? "dish" : photo.category
+      }))
+    );
+  }
+
+  if (!hydrated) {
+    return (
+      <div className="container grid gap-5 py-8 sm:py-10">
+        <SkeletonCard className="h-[280px]" />
+        <SkeletonCard className="h-[520px]" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="container py-10">
+        <EmptyState
+          title="Sign in as a restaurant owner"
+          description="The owner workspace is where you keep the live menu, photo gallery, and business performance in sync."
+          action={
+            <Button asChild>
+              <Link href="/auth/restaurant/sign-in">Sign in</Link>
+            </Button>
+          }
+        />
+      </div>
+    );
+  }
+
+  if (user.role !== "owner") {
+    return (
+      <div className="container py-10">
+        <EmptyState
+          title="Restaurant owner access required"
+          description="This studio is reserved for owner accounts. Customer, driver, and admin roles keep their own workspaces."
+          action={
+            <Button asChild variant="outline">
+              <Link href={resolveWorkspaceHref(user.role)}>Open your workspace</Link>
+            </Button>
+          }
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="container space-y-8 py-8 sm:py-10">
+      <section className="section-shell overflow-hidden p-6 sm:p-8">
+        <div className="relative z-10 grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+          <div className="space-y-6">
+            <Badge className="w-fit gap-2">
+              <Store className="h-3.5 w-3.5" />
+              Restaurant studio
+            </Badge>
+            <div className="space-y-4">
+              <h1 className="balance-text max-w-4xl font-display text-5xl text-foreground sm:text-6xl">
+                Run your menu, photos, and storefront performance from one owner dashboard.
+              </h1>
+              <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
+                Adjust what guests see in the app, keep items in stock, and watch the signals that move repeat orders.
+              </p>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="stat-pill min-w-[150px]">
+                <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+                  Conversion
+                </p>
+                <p className="mt-2 text-lg font-semibold text-foreground">
+                  {conversionRate.toFixed(1)}%
+                </p>
+              </div>
+              <div className="stat-pill min-w-[150px]">
+                <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+                  Last saved
+                </p>
+                <p className="mt-2 text-lg font-semibold text-foreground">
+                  {formatOrderTime(lastSavedAt)}
+                </p>
+              </div>
+              <div className="stat-pill min-w-[150px]">
+                <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+                  Menu status
+                </p>
+                <p className="mt-2 text-lg font-semibold text-foreground">
+                  {isOpenForOrders ? "Open" : "Paused"}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              <Button onClick={handleSaveChanges}>
+                {saveState === "saving" ? "Saving..." : saveState === "saved" ? "Saved" : "Save changes"}
+                <Sparkles className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+                <ImagePlus className="h-4 w-4" />
+                Upload photos
+              </Button>
+              <Button variant="outline" onClick={addSection}>
+                <Plus className="h-4 w-4" />
+                Add section
+              </Button>
+            </div>
+          </div>
+
+          <PhotoSurface
+            photo={coverPhoto}
+            fallbackTitle={restaurantName}
+            fallbackSubtitle={heroTagline}
+            fallbackTheme={ownerRestaurant.imageTheme}
+            className="min-h-[360px] p-6"
+            badgeLabel={isOpenForOrders ? "Accepting orders" : "Paused in app"}
+          />
+        </div>
+      </section>
+
+      <Tabs defaultValue="overview" className="space-y-0">
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="menu">Menu editor</TabsTrigger>
+          <TabsTrigger value="photos">Photo manager</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+            {insightMetrics.map((metric) => (
+              <InsightCard key={metric.label} {...metric} />
+            ))}
+          </div>
+
+          <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
+            <Card className="overflow-hidden bg-white/86">
+              <CardHeader className="border-b border-border/70 bg-surface/35">
+                <CardTitle>Storefront profile</CardTitle>
+                <CardDescription>
+                  These fields shape the headline block guests see before they open your menu.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4 pt-6">
+                <div className="space-y-2">
+                  <FieldLabel>Restaurant name</FieldLabel>
+                  <Input
+                    value={restaurantName}
+                    onChange={(event) => {
+                      markDirty();
+                      setRestaurantName(event.target.value);
+                    }}
+                    className="h-12"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <FieldLabel>Hero line</FieldLabel>
+                  <Input
+                    value={heroTagline}
+                    onChange={(event) => {
+                      markDirty();
+                      setHeroTagline(event.target.value);
+                    }}
+                    className="h-12"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <FieldLabel>Short description</FieldLabel>
+                  <Textarea
+                    value={shortDescription}
+                    onChange={(event) => {
+                      markDirty();
+                      setShortDescription(event.target.value);
+                    }}
+                    className="min-h-[150px]"
+                  />
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <button
+                    type="button"
+                    className={cn(
+                      "frost-panel flex items-start justify-between gap-3 p-4 text-left transition",
+                      isOpenForOrders ? "ring-2 ring-primary/25" : ""
+                    )}
+                    onClick={() => {
+                      markDirty();
+                      setIsOpenForOrders((current) => !current);
+                    }}
+                  >
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                        Order intake
+                      </p>
+                      <p className="mt-2 text-lg font-semibold text-foreground">
+                        {isOpenForOrders ? "Open for orders" : "Pause incoming orders"}
+                      </p>
+                    </div>
+                    <Badge variant={isOpenForOrders ? "success" : "outline"}>
+                      {isOpenForOrders ? "Live" : "Paused"}
+                    </Badge>
+                  </button>
+                  <button
+                    type="button"
+                    className={cn(
+                      "frost-panel flex items-start justify-between gap-3 p-4 text-left transition",
+                      pickupEnabled ? "ring-2 ring-primary/25" : ""
+                    )}
+                    onClick={() => {
+                      markDirty();
+                      setPickupEnabled((current) => !current);
+                    }}
+                  >
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                        Pickup mode
+                      </p>
+                      <p className="mt-2 text-lg font-semibold text-foreground">
+                        {pickupEnabled ? "Pickup enabled" : "Pickup hidden"}
+                      </p>
+                    </div>
+                    <Badge variant={pickupEnabled ? "success" : "outline"}>
+                      {pickupEnabled ? "On" : "Off"}
+                    </Badge>
+                  </button>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="grid gap-6">
+              <Card className="overflow-hidden bg-white/86">
+                <CardHeader className="border-b border-border/70 bg-surface/35">
+                  <CardTitle>Peak ordering hours</CardTitle>
+                  <CardDescription>
+                    Dinner still leads, with lunch strongest when visuals are fresh and live items stay in stock.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  <div className="grid h-[220px] grid-cols-5 items-end gap-3">
+                    {busyHours.map((hour) => (
+                      <div key={hour.label} className="flex flex-col items-center gap-3">
+                        <div className="flex h-[180px] w-full items-end rounded-[24px] bg-secondary/60 p-2">
+                          <div
+                            className="w-full rounded-[18px] bg-gradient-to-t from-primary via-orange-400 to-highlight"
+                            style={{ height: `${hour.value}%` }}
+                          />
+                        </div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                          {hour.label}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <div className="grid gap-6 lg:grid-cols-2">
+                <Card className="overflow-hidden bg-white/86">
+                  <CardHeader className="border-b border-border/70 bg-surface/35">
+                    <CardTitle>Top movers</CardTitle>
+                    <CardDescription>
+                      Items currently doing the work for revenue and reorder lift.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3 pt-6">
+                    {topItems.map((item) => (
+                      <div key={item.id} className="frost-panel flex items-start justify-between gap-3 p-4">
+                        <div>
+                          <p className="font-semibold text-foreground">{item.name}</p>
+                          <p className="mt-1 text-sm text-muted-foreground">
+                            {item.sales} orders • {formatCurrency(item.revenue)}
+                          </p>
+                        </div>
+                        <Badge variant="success">{item.delta}</Badge>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+
+                <Card className="overflow-hidden bg-white/86">
+                  <CardHeader className="border-b border-border/70 bg-surface/35">
+                    <CardTitle>Guest pulse</CardTitle>
+                    <CardDescription>
+                      Recent review themes, useful for deciding which dishes deserve more visibility.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3 pt-6">
+                    {ownerRestaurant.reviews.map((review) => (
+                      <div key={review.id} className="frost-panel p-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="font-semibold text-foreground">{review.title}</p>
+                          <Badge variant="outline">
+                            <Star className="mr-1 h-3.5 w-3.5" />
+                            {review.rating}
+                          </Badge>
+                        </div>
+                        <p className="mt-2 text-sm leading-6 text-muted-foreground">{review.body}</p>
+                        <p className="mt-3 text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                          {review.author} • {formatOrderTime(review.date)}
+                        </p>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="menu" className="space-y-6">
+          <section className="section-shell p-6">
+            <div className="relative z-10 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+              <div className="space-y-2">
+                <Badge variant="outline" className="w-fit gap-2">
+                  <Layers3 className="h-3.5 w-3.5" />
+                  Menu composer
+                </Badge>
+                <h2 className="font-display text-4xl text-foreground">Edit sections and items without leaving the app.</h2>
+                <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
+                  Keep descriptions tight, prices current, and visuals assigned so guests see a complete storefront.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <span className="stat-pill">{flatItems.length} total items</span>
+                <span className="stat-pill">{liveItems.length} live now</span>
+                <span className="stat-pill">{soldOutItems.length} sold out</span>
+              </div>
+            </div>
+          </section>
+
+          <div className="grid gap-6 2xl:grid-cols-[1.15fr_0.85fr]">
+            <div className="space-y-6">
+              {menuSections.map((section) => (
+                <Card key={section.id} className="overflow-hidden bg-white/88">
+                  <CardHeader className="border-b border-border/70 bg-surface/35">
+                    <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr_auto] lg:items-start">
+                      <div className="space-y-2">
+                        <FieldLabel>Section title</FieldLabel>
+                        <Input
+                          value={section.title}
+                          onChange={(event) => updateSection(section.id, { title: event.target.value })}
+                          className="h-12"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <FieldLabel>Section description</FieldLabel>
+                        <Input
+                          value={section.description}
+                          onChange={(event) =>
+                            updateSection(section.id, { description: event.target.value })
+                          }
+                          className="h-12"
+                        />
+                      </div>
+                      <Button variant="outline" onClick={() => addMenuItem(section.id)}>
+                        <Plus className="h-4 w-4" />
+                        Add item
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4 pt-6">
+                    {section.items.length ? (
+                      section.items.map((item) => {
+                        const assignedPhoto = gallery.find((photo) => photo.id === item.photoId);
+
+                        return (
+                          <div key={item.id} className="frost-panel grid gap-4 p-4 xl:grid-cols-[220px_1fr]">
+                            <PhotoSurface
+                              photo={assignedPhoto}
+                              fallbackTitle={item.name}
+                              fallbackSubtitle={item.description}
+                              fallbackTheme={item.imageTheme ?? ownerRestaurant.imageTheme}
+                              className="min-h-[220px] p-4"
+                              badgeLabel={assignedPhoto ? formatStatusLabel(assignedPhoto.category) : "Preview"}
+                            />
+
+                            <div className="space-y-4">
+                              <div className="grid gap-4 lg:grid-cols-[1fr_150px_160px]">
+                                <div className="space-y-2">
+                                  <FieldLabel>Item name</FieldLabel>
+                                  <Input
+                                    value={item.name}
+                                    onChange={(event) =>
+                                      updateItem(section.id, item.id, (current) => ({
+                                        ...current,
+                                        name: event.target.value
+                                      }))
+                                    }
+                                    className="h-12"
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <FieldLabel>Price</FieldLabel>
+                                  <Input
+                                    type="number"
+                                    min="0"
+                                    step="0.5"
+                                    value={item.price}
+                                    onChange={(event) =>
+                                      updateItem(section.id, item.id, (current) => ({
+                                        ...current,
+                                        price: Number(event.target.value || 0)
+                                      }))
+                                    }
+                                    className="h-12"
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <FieldLabel>Status</FieldLabel>
+                                  <select
+                                    value={item.status}
+                                    onChange={(event) =>
+                                      updateItem(section.id, item.id, (current) => ({
+                                        ...current,
+                                        status: event.target.value as OwnerItemStatus
+                                      }))
+                                    }
+                                    className={selectFieldClassName}
+                                  >
+                                    <option value="live">Live</option>
+                                    <option value="draft">Draft</option>
+                                    <option value="sold_out">Sold out</option>
+                                  </select>
+                                </div>
+                              </div>
+
+                              <div className="space-y-2">
+                                <FieldLabel>Description</FieldLabel>
+                                <Textarea
+                                  value={item.description}
+                                  onChange={(event) =>
+                                    updateItem(section.id, item.id, (current) => ({
+                                      ...current,
+                                      description: event.target.value
+                                    }))
+                                  }
+                                  className="min-h-[120px]"
+                                />
+                              </div>
+
+                              <div className="grid gap-4 lg:grid-cols-3">
+                                <div className="space-y-2">
+                                  <FieldLabel>Tags</FieldLabel>
+                                  <Input
+                                    value={item.tags.join(", ")}
+                                    onChange={(event) =>
+                                      updateItem(section.id, item.id, (current) => ({
+                                        ...current,
+                                        tags: event.target.value
+                                          .split(",")
+                                          .map((entry) => entry.trim())
+                                          .filter(Boolean)
+                                      }))
+                                    }
+                                    className="h-12"
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <FieldLabel>Prep time (min)</FieldLabel>
+                                  <Input
+                                    type="number"
+                                    min="1"
+                                    step="1"
+                                    value={item.prepTimeMinutes}
+                                    onChange={(event) =>
+                                      updateItem(section.id, item.id, (current) => ({
+                                        ...current,
+                                        prepTimeMinutes: Number(event.target.value || 1)
+                                      }))
+                                    }
+                                    className="h-12"
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <FieldLabel>Assigned photo</FieldLabel>
+                                  <select
+                                    value={item.photoId ?? ""}
+                                    onChange={(event) =>
+                                      updateItem(section.id, item.id, (current) => ({
+                                        ...current,
+                                        photoId: event.target.value || undefined
+                                      }))
+                                    }
+                                    className={selectFieldClassName}
+                                  >
+                                    <option value="">Use house art</option>
+                                    {gallery.map((photo) => (
+                                      <option key={photo.id} value={photo.id}>
+                                        {photo.title}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                              </div>
+
+                              <div className="flex flex-wrap items-center gap-3">
+                                <Badge variant={itemStatusVariant(item.status)}>
+                                  {formatStatusLabel(item.status)}
+                                </Badge>
+                                <Button
+                                  variant={item.popular ? "default" : "outline"}
+                                  size="sm"
+                                  onClick={() =>
+                                    updateItem(section.id, item.id, (current) => ({
+                                      ...current,
+                                      popular: !current.popular
+                                    }))
+                                  }
+                                >
+                                  <TrendingUp className="h-4 w-4" />
+                                  {item.popular ? "Featured in app" : "Feature this item"}
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    markDirty();
+                                    setMenuSections((current) =>
+                                      current.map((currentSection) =>
+                                        currentSection.id === section.id
+                                          ? {
+                                              ...currentSection,
+                                              items: currentSection.items.filter(
+                                                (entry) => entry.id !== item.id
+                                              )
+                                            }
+                                          : currentSection
+                                      )
+                                    );
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                  Remove
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <EmptyState
+                        title="No items yet"
+                        description="Add dishes, drinks, or bundles to make this section visible in the app."
+                        action={
+                          <Button onClick={() => addMenuItem(section.id)}>
+                            <Plus className="h-4 w-4" />
+                            Add first item
+                          </Button>
+                        }
+                      />
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            <div className="space-y-6">
+              <Card className="overflow-hidden bg-white/86">
+                <CardHeader className="border-b border-border/70 bg-surface/35">
+                  <CardTitle>Menu readiness</CardTitle>
+                  <CardDescription>
+                    Quick signals for what still needs owner attention before pushing updates.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4 pt-6">
+                  <div className="frost-panel p-4">
+                    <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                      Average prep time
+                    </p>
+                    <p className="mt-2 text-2xl font-semibold text-foreground">
+                      {Math.round(
+                        flatItems.reduce((sum, item) => sum + item.prepTimeMinutes, 0) /
+                          Math.max(1, flatItems.length)
+                      )}{" "}
+                      min
+                    </p>
+                  </div>
+                  <div className="frost-panel p-4">
+                    <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                      Draft items
+                    </p>
+                    <p className="mt-2 text-2xl font-semibold text-foreground">
+                      {flatItems.filter((item) => item.status === "draft").length}
+                    </p>
+                  </div>
+                  <div className="frost-panel p-4">
+                    <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                      Featured dishes
+                    </p>
+                    <p className="mt-2 text-2xl font-semibold text-foreground">
+                      {flatItems.filter((item) => item.popular).length}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="overflow-hidden bg-white/86">
+                <CardHeader className="border-b border-border/70 bg-surface/35">
+                  <CardTitle>Live storefront preview</CardTitle>
+                  <CardDescription>
+                    A compact read on what customers are about to browse in the app.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4 pt-6">
+                  <PhotoSurface
+                    photo={coverPhoto}
+                    fallbackTitle={restaurantName}
+                    fallbackSubtitle={shortDescription}
+                    fallbackTheme={ownerRestaurant.imageTheme}
+                    className="min-h-[240px] p-5"
+                    badgeLabel="Storefront hero"
+                  />
+                  <div className="space-y-3">
+                    {menuSections.map((section) => (
+                      <div key={section.id} className="frost-panel p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="font-semibold text-foreground">{section.title}</p>
+                            <p className="mt-1 text-sm text-muted-foreground">{section.description}</p>
+                          </div>
+                          <Badge variant="outline">{section.items.length} items</Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="photos" className="space-y-6">
+          <div className="grid gap-6 xl:grid-cols-[0.88fr_1.12fr]">
+            <Card className="overflow-hidden bg-white/88">
+              <CardHeader className="border-b border-border/70 bg-surface/35">
+                <CardTitle>Photo manager</CardTitle>
+                <CardDescription>
+                  Add menu photography, swap the hero image, and keep visuals current with what the kitchen is selling.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4 pt-6">
+                <div className="space-y-2">
+                  <FieldLabel>Photo title</FieldLabel>
+                  <Input
+                    value={photoTitle}
+                    onChange={(event) => setPhotoTitle(event.target.value)}
+                    className="h-12"
+                    placeholder="Charcoal grill spread"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <FieldLabel>Caption</FieldLabel>
+                  <Textarea
+                    value={photoCaption}
+                    onChange={(event) => setPhotoCaption(event.target.value)}
+                    className="min-h-[120px]"
+                    placeholder="What should customers understand when they see this photo?"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <FieldLabel>Image URL</FieldLabel>
+                  <Input
+                    value={photoUrl}
+                    onChange={(event) => setPhotoUrl(event.target.value)}
+                    className="h-12"
+                    placeholder="https://..."
+                  />
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <FieldLabel>Category</FieldLabel>
+                    <select
+                      value={photoCategory}
+                      onChange={(event) => setPhotoCategory(event.target.value as PhotoCategory)}
+                      className={selectFieldClassName}
+                    >
+                      <option value="dish">Dish photo</option>
+                      <option value="cover">Storefront cover</option>
+                      <option value="ambience">Ambience shot</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <FieldLabel>Fallback art theme</FieldLabel>
+                    <select
+                      value={photoTheme}
+                      onChange={(event) => setPhotoTheme(event.target.value as ImageTheme)}
+                      className={selectFieldClassName}
+                    >
+                      <option value="saffron">Saffron</option>
+                      <option value="ember">Ember</option>
+                      <option value="mint">Mint</option>
+                      <option value="coast">Coast</option>
+                      <option value="berry">Berry</option>
+                      <option value="night">Night</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  <Button onClick={handleAddPhotoByUrl} disabled={!photoUrl.trim()}>
+                    <Plus className="h-4 w-4" />
+                    Add from URL
+                  </Button>
+                  <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+                    <ImagePlus className="h-4 w-4" />
+                    Upload from device
+                  </Button>
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={handleFileUpload}
+                />
+                <div className="frost-panel flex items-start gap-3 p-4 text-sm text-muted-foreground">
+                  <ChartColumn className="mt-0.5 h-4 w-4 text-primary" />
+                  <p>
+                    Photos with strong lighting and close framing usually lift click-through on menu items more than generic dining-room shots.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="space-y-6">
+              <Card className="overflow-hidden bg-white/88">
+                <CardHeader className="border-b border-border/70 bg-surface/35">
+                  <CardTitle>Gallery</CardTitle>
+                  <CardDescription>
+                    Assign a cover image, keep dish shots discoverable, and remove visuals that no longer match the live menu.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="grid gap-4 pt-6 md:grid-cols-2">
+                  {gallery.map((photo) => (
+                    <Card key={photo.id} className="overflow-hidden bg-white/88">
+                      <PhotoSurface
+                        photo={photo}
+                        fallbackTitle={photo.title}
+                        fallbackSubtitle={photo.caption}
+                        fallbackTheme={photo.theme}
+                        className="min-h-[220px] p-4"
+                        badgeLabel={formatStatusLabel(photo.category)}
+                      />
+                      <CardContent className="space-y-3 pt-4">
+                        <div>
+                          <p className="font-semibold text-foreground">{photo.title}</p>
+                          <p className="mt-1 text-sm leading-6 text-muted-foreground">{photo.caption}</p>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge variant={photo.category === "cover" ? "success" : "outline"}>
+                            {formatStatusLabel(photo.category)}
+                          </Badge>
+                          <Badge variant="secondary">{formatOrderTime(photo.addedAt)}</Badge>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <Button
+                            size="sm"
+                            variant={photo.category === "cover" ? "secondary" : "outline"}
+                            onClick={() => setCoverPhoto(photo.id)}
+                          >
+                            {photo.category === "cover" ? "Current cover" : "Set as cover"}
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={() => removePhoto(photo.id)}>
+                            <Trash2 className="h-4 w-4" />
+                            Remove
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </CardContent>
+              </Card>
+
+              <Card className="overflow-hidden bg-white/88">
+                <CardHeader className="border-b border-border/70 bg-surface/35">
+                  <CardTitle>Visual coverage</CardTitle>
+                  <CardDescription>
+                    Pairing photos with best sellers keeps the catalog from feeling thin or unfinished.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3 pt-6">
+                  {flatItems.slice(0, 5).map((item) => {
+                    const hasAssignedPhoto = gallery.some((photo) => photo.id === item.photoId);
+
+                    return (
+                      <div key={item.id} className="frost-panel flex items-start justify-between gap-3 p-4">
+                        <div>
+                          <p className="font-semibold text-foreground">{item.name}</p>
+                          <p className="mt-1 text-sm text-muted-foreground">{item.sectionTitle}</p>
+                        </div>
+                        <Badge variant={hasAssignedPhoto ? "success" : "outline"}>
+                          {hasAssignedPhoto ? "Photo assigned" : "Needs image"}
+                        </Badge>
+                      </div>
+                    );
+                  })}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
