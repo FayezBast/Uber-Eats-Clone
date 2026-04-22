@@ -120,7 +120,18 @@ const deliveryStatusFilters: Array<{ label: string; value: "all" | DeliveryStatu
 ];
 
 const adminSelectClassName =
-  "h-11 w-full rounded-2xl border border-white/10 bg-white/[0.06] px-4 text-sm text-white outline-none transition focus:border-emerald-400/30";
+  "h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none transition focus:border-sky-500/45 focus:ring-2 focus:ring-sky-500/10";
+const adminPanelClassName =
+  "rounded-[30px] border border-slate-200/80 bg-white/92 text-slate-900 shadow-[0_28px_70px_-46px_rgba(15,23,42,0.3)]";
+const adminSubtlePanelClassName = "rounded-[24px] border border-slate-200/70 bg-slate-50/80";
+const adminChipClassName =
+  "rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium tracking-[0.08em] text-slate-500";
+const adminOutlineButtonClassName =
+  "border-slate-200 bg-white text-slate-800 hover:translate-y-0 hover:bg-slate-50 hover:text-slate-900 hover:shadow-none";
+const adminPrimaryButtonClassName =
+  "bg-slate-900 text-white shadow-none hover:translate-y-0 hover:bg-slate-800 hover:shadow-none";
+const adminSecondaryButtonClassName =
+  "bg-sky-600 text-white shadow-none hover:translate-y-0 hover:bg-sky-500 hover:shadow-none";
 
 function average(values: number[]) {
   if (!values.length) {
@@ -247,21 +258,21 @@ function toneClasses(tone: WatchTone) {
   switch (tone) {
     case "critical":
       return {
-        badge: "border-rose-500/30 bg-rose-500/12 text-rose-200",
-        panel: "border-rose-500/18 bg-rose-500/[0.08]",
-        icon: "bg-rose-500/14 text-rose-200"
+        badge: "border-rose-200 bg-rose-50 text-rose-700",
+        panel: "border-rose-200/80 bg-rose-50/70",
+        icon: "bg-rose-100 text-rose-700"
       };
     case "attention":
       return {
-        badge: "border-amber-400/30 bg-amber-400/12 text-amber-100",
-        panel: "border-amber-400/18 bg-amber-400/[0.08]",
-        icon: "bg-amber-400/14 text-amber-100"
+        badge: "border-amber-200 bg-amber-50 text-amber-700",
+        panel: "border-amber-200/80 bg-amber-50/75",
+        icon: "bg-amber-100 text-amber-700"
       };
     default:
       return {
-        badge: "border-white/10 bg-white/[0.05] text-white/72",
-        panel: "border-white/8 bg-white/[0.03]",
-        icon: "bg-white/[0.06] text-white/72"
+        badge: "border-slate-200 bg-white text-slate-600",
+        panel: "border-slate-200/80 bg-slate-50/85",
+        icon: "bg-slate-100 text-slate-600"
       };
   }
 }
@@ -269,11 +280,11 @@ function toneClasses(tone: WatchTone) {
 function loadBarClasses(tone: LoadTone) {
   switch (tone) {
     case "amber":
-      return "bg-amber-400";
+      return "bg-amber-500";
     case "sky":
-      return "bg-sky-400";
+      return "bg-sky-500";
     case "slate":
-      return "bg-white/55";
+      return "bg-slate-400";
     default:
       return "bg-emerald-500";
   }
@@ -282,23 +293,23 @@ function loadBarClasses(tone: LoadTone) {
 function statusPillClasses(status: DeliveryRecord["status"]) {
   switch (status) {
     case "delivered":
-      return "border-emerald-500/25 bg-emerald-500/12 text-emerald-200";
+      return "border-emerald-200 bg-emerald-50 text-emerald-700";
     case "accepted":
     case "picked_up":
-      return "border-sky-500/25 bg-sky-500/12 text-sky-200";
+      return "border-sky-200 bg-sky-50 text-sky-700";
     default:
-      return "border-amber-400/25 bg-amber-400/12 text-amber-100";
+      return "border-amber-200 bg-amber-50 text-amber-700";
   }
 }
 
 function notificationPillClasses(tone: WatchTone) {
   switch (tone) {
     case "critical":
-      return "border-rose-500/25 bg-rose-500/12 text-rose-200";
+      return "border-rose-200 bg-rose-50 text-rose-700";
     case "attention":
-      return "border-amber-400/25 bg-amber-400/12 text-amber-100";
+      return "border-amber-200 bg-amber-50 text-amber-700";
     default:
-      return "border-emerald-500/20 bg-emerald-500/10 text-emerald-200";
+      return "border-emerald-200 bg-emerald-50 text-emerald-700";
   }
 }
 
@@ -326,11 +337,11 @@ function trendLabel(delta: number | null) {
 function trendChipClasses(tone: TrendTone) {
   switch (tone) {
     case "positive":
-      return "border-emerald-500/20 bg-emerald-500/10 text-emerald-200";
+      return "border-emerald-200 bg-emerald-50 text-emerald-700";
     case "warning":
-      return "border-amber-400/25 bg-amber-400/12 text-amber-100";
+      return "border-amber-200 bg-amber-50 text-amber-700";
     default:
-      return "border-white/10 bg-white/[0.05] text-white/72";
+      return "border-slate-200 bg-slate-50 text-slate-600";
   }
 }
 
@@ -541,14 +552,14 @@ function DashboardShell({
     <section
       id={id}
       className={cn(
-        "rounded-[30px] border border-white/8 bg-[#151515] p-5 text-white shadow-[0_24px_50px_rgba(0,0,0,0.22)] sm:p-6",
+        `${adminPanelClassName} p-5 sm:p-6`,
         className
       )}
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-xl font-semibold tracking-tight text-white sm:text-[1.45rem]">{title}</h2>
-          <p className="mt-1.5 max-w-2xl text-sm leading-6 text-white/55">{description}</p>
+          <h2 className="text-xl font-semibold tracking-tight text-slate-950 sm:text-[1.45rem]">{title}</h2>
+          <p className="mt-1.5 max-w-2xl text-sm leading-6 text-slate-500">{description}</p>
         </div>
         {action}
       </div>
@@ -576,14 +587,14 @@ function SidebarNavItem({
       className={cn(
         "flex items-center gap-3 rounded-2xl px-3 py-3 text-sm transition-colors",
         active
-          ? "bg-white/[0.08] text-white"
-          : "text-white/66 hover:bg-white/[0.04] hover:text-white"
+          ? "bg-white/12 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+          : "text-slate-300 hover:bg-white/8 hover:text-white"
       )}
     >
       <Icon className="h-4 w-4" />
       <span className="flex-1">{label}</span>
       {value ? (
-        <span className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[11px] tracking-[0.14em] text-white/60">
+        <span className="rounded-full border border-white/10 bg-white/8 px-2.5 py-1 text-[11px] tracking-[0.14em] text-slate-300">
           {value}
         </span>
       ) : null}
@@ -607,19 +618,19 @@ function StatCard({
   chipTone?: TrendTone;
 }) {
   return (
-    <div className="rounded-[28px] border border-white/8 bg-[#171717] p-5 text-white shadow-[0_20px_40px_rgba(0,0,0,0.18)]">
+    <div className={`${adminPanelClassName} p-5`}>
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-white/40">{label}</p>
-          <p className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-[2.2rem]">{value}</p>
+          <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-slate-400">{label}</p>
+          <p className="mt-4 text-3xl font-semibold tracking-tight text-slate-950 sm:text-[2.2rem]">{value}</p>
         </div>
-        <div className="rounded-2xl border border-emerald-500/18 bg-emerald-500/10 p-3 text-emerald-400">
+        <div className="rounded-2xl border border-slate-200 bg-slate-900 p-3 text-white">
           <Icon className="h-5 w-5" />
         </div>
       </div>
       <div className="mt-4 flex flex-wrap items-center gap-2">
         <div className={cn("rounded-full border px-3 py-1 text-xs", trendChipClasses(chipTone))}>{chip}</div>
-        <p className="text-sm text-white/55">{detail}</p>
+        <p className="text-sm text-slate-500">{detail}</p>
       </div>
     </div>
   );
@@ -662,12 +673,12 @@ function RevenueTrendChart({ points }: { points: RevenuePoint[] }) {
   ].join(" ");
 
   return (
-    <div className="rounded-[26px] border border-white/8 bg-[#111111] p-3 sm:p-4">
+    <div className="rounded-[26px] border border-slate-200/80 bg-slate-50/85 p-3 sm:p-4">
       <svg viewBox={`0 0 ${width} ${height}`} className="h-[280px] w-full" role="img" aria-label="Revenue trend">
         <defs>
           <linearGradient id="admin-revenue-fill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="rgba(34,197,94,0.32)" />
-            <stop offset="100%" stopColor="rgba(34,197,94,0.02)" />
+            <stop offset="0%" stopColor="rgba(14,165,233,0.28)" />
+            <stop offset="100%" stopColor="rgba(14,165,233,0.02)" />
           </linearGradient>
         </defs>
 
@@ -680,7 +691,7 @@ function RevenueTrendChart({ points }: { points: RevenuePoint[] }) {
               x2={width - padding.right}
               y1={y}
               y2={y}
-              stroke="rgba(255,255,255,0.22)"
+              stroke="rgba(148,163,184,0.28)"
               strokeDasharray="4 6"
             />
           );
@@ -690,7 +701,7 @@ function RevenueTrendChart({ points }: { points: RevenuePoint[] }) {
         <path
           d={linePath}
           fill="none"
-          stroke="#22c55e"
+          stroke="#0284c7"
           strokeLinecap="round"
           strokeLinejoin="round"
           strokeWidth="3"
@@ -698,12 +709,12 @@ function RevenueTrendChart({ points }: { points: RevenuePoint[] }) {
 
         {positions.map((point, index) => (
           <g key={`${point.label}-${index}`}>
-            <circle cx={point.x} cy={point.y} r="4" fill="#22c55e" />
-            <circle cx={point.x} cy={point.y} r="8" fill="rgba(34,197,94,0.15)" />
+            <circle cx={point.x} cy={point.y} r="4" fill="#0284c7" />
+            <circle cx={point.x} cy={point.y} r="8" fill="rgba(2,132,199,0.16)" />
             <text
               x={point.x}
               y={height - 10}
-              fill="rgba(255,255,255,0.48)"
+              fill="rgba(100,116,139,0.88)"
               fontSize="12"
               textAnchor="middle"
             >
@@ -724,10 +735,10 @@ function DistributionBars({ items }: { items: LoadBarItem[] }) {
       {items.map((item) => (
         <div key={item.label} className="space-y-2">
           <div className="flex items-center justify-between gap-3 text-sm">
-            <span className="text-white/62">{item.label}</span>
-            <span className="text-white/78">{item.value}</span>
+            <span className="text-slate-500">{item.label}</span>
+            <span className="font-medium text-slate-700">{item.value}</span>
           </div>
-          <div className="h-10 rounded-2xl bg-white/[0.05] p-1">
+          <div className="h-10 rounded-2xl bg-slate-100 p-1">
             <div
               className={cn("h-full rounded-[14px]", loadBarClasses(item.tone))}
               style={{ width: `${Math.max((item.value / maxValue) * 100, item.value > 0 ? 12 : 0)}%` }}
@@ -743,7 +754,7 @@ function StatusPill({ status }: { status: DeliveryRecord["status"] }) {
   return (
     <div
       className={cn(
-        "inline-flex rounded-full border px-3 py-1 text-xs tracking-[0.08em]",
+        "inline-flex rounded-full border px-3 py-1 text-xs font-medium tracking-[0.08em]",
         statusPillClasses(status)
       )}
     >
@@ -756,10 +767,10 @@ function DriverRouteMap({ tracking }: { tracking: TrackingSnapshot }) {
   const plotPoints = buildMapPlotPoints(tracking);
 
   return (
-    <div className="relative h-[260px] overflow-hidden rounded-[24px] border border-white/10 bg-[#0e0e0e]">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(34,197,94,0.16),transparent_32%),radial-gradient(circle_at_bottom_left,rgba(56,189,248,0.1),transparent_26%)]" />
+    <div className="relative h-[260px] overflow-hidden rounded-[24px] border border-slate-200 bg-slate-950">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(14,165,233,0.18),transparent_34%),radial-gradient(circle_at_bottom_left,rgba(34,197,94,0.12),transparent_24%)]" />
       <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:56px_56px]" />
-      <div className="absolute left-4 top-4 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-white/62">
+      <div className="absolute left-4 top-4 rounded-full border border-white/10 bg-white/8 px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-slate-300">
         GPS route
       </div>
       {plotPoints.map((point) => (
@@ -776,20 +787,20 @@ function DriverRouteMap({ tracking }: { tracking: TrackingSnapshot }) {
             className={cn(
               "rounded-full",
               point.current
-                ? "h-4 w-4 border-4 border-black bg-emerald-400 shadow-[0_0_0_12px_rgba(34,197,94,0.14)]"
+                ? "h-4 w-4 border-4 border-slate-950 bg-sky-400 shadow-[0_0_0_12px_rgba(14,165,233,0.18)]"
                 : "h-2.5 w-2.5 bg-white/45"
             )}
           />
         </div>
       ))}
-      <div className="absolute inset-x-4 bottom-4 rounded-[18px] border border-white/10 bg-black/40 p-4 backdrop-blur">
+      <div className="absolute inset-x-4 bottom-4 rounded-[18px] border border-white/10 bg-slate-950/80 p-4 backdrop-blur">
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.16em] text-white/42">Latitude</p>
+            <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Latitude</p>
             <p className="mt-2 text-sm font-semibold text-white">{formatCoordinate(tracking.currentLatitude)}</p>
           </div>
           <div>
-            <p className="text-[11px] uppercase tracking-[0.16em] text-white/42">Longitude</p>
+            <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Longitude</p>
             <p className="mt-2 text-sm font-semibold text-white">{formatCoordinate(tracking.currentLongitude)}</p>
           </div>
         </div>
@@ -805,17 +816,17 @@ function AdminLoadingState() {
         {Array.from({ length: 4 }).map((_, index) => (
           <div
             key={`admin-stat-skeleton-${index}`}
-            className="h-[170px] animate-pulse rounded-[28px] bg-[#dbd8d0]"
+            className="h-[170px] animate-pulse rounded-[28px] bg-slate-200/80"
           />
         ))}
       </section>
       <section className="grid gap-4 2xl:grid-cols-[minmax(0,2fr)_minmax(340px,1fr)]">
-        <div className="h-[420px] animate-pulse rounded-[30px] bg-[#dbd8d0]" />
-        <div className="h-[420px] animate-pulse rounded-[30px] bg-[#dbd8d0]" />
+        <div className="h-[420px] animate-pulse rounded-[30px] bg-slate-200/80" />
+        <div className="h-[420px] animate-pulse rounded-[30px] bg-slate-200/80" />
       </section>
       <section className="grid gap-4 2xl:grid-cols-[minmax(0,1.6fr)_minmax(360px,1fr)]">
-        <div className="h-[420px] animate-pulse rounded-[30px] bg-[#dbd8d0]" />
-        <div className="h-[420px] animate-pulse rounded-[30px] bg-[#dbd8d0]" />
+        <div className="h-[420px] animate-pulse rounded-[30px] bg-slate-200/80" />
+        <div className="h-[420px] animate-pulse rounded-[30px] bg-slate-200/80" />
       </section>
     </>
   );
@@ -1388,10 +1399,10 @@ export default function AdminPage() {
 
   if (!hydrated) {
     return (
-      <div className="min-h-screen bg-[#090909] p-3 sm:p-4 lg:p-6">
-        <div className="grid gap-4 xl:grid-cols-[260px_minmax(0,1fr)]">
-          <div className="h-[420px] animate-pulse rounded-[32px] bg-[#141414]" />
-          <div className="h-[740px] animate-pulse rounded-[32px] bg-[#efede7]" />
+      <div className="min-h-screen bg-[linear-gradient(180deg,#f6f8fb_0%,#edf2f7_52%,#f8fafc_100%)] p-4 lg:p-6">
+        <div className="mx-auto grid max-w-[1800px] gap-5 xl:grid-cols-[280px_minmax(0,1fr)]">
+          <div className="h-[460px] animate-pulse rounded-[34px] bg-slate-900/90" />
+          <div className="h-[780px] animate-pulse rounded-[34px] bg-white/75" />
         </div>
       </div>
     );
@@ -1437,37 +1448,41 @@ export default function AdminPage() {
 
   return (
     <Dialog open={locatorOpen} onOpenChange={setLocatorOpen}>
-      <div className="min-h-screen bg-[#090909] p-3 sm:p-4 lg:p-6">
-        <div className="grid gap-4 xl:grid-cols-[260px_minmax(0,1fr)]">
-          <aside className="rounded-[32px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(34,197,94,0.12),transparent_28%),linear-gradient(180deg,#141414_0%,#101010_100%)] p-5 text-white shadow-[0_24px_60px_rgba(0,0,0,0.28)] sm:p-6">
+      <div className="min-h-screen bg-[linear-gradient(180deg,#f6f8fb_0%,#edf2f7_52%,#f8fafc_100%)] p-4 lg:p-6">
+        <div className="mx-auto grid max-w-[1800px] gap-5 xl:grid-cols-[280px_minmax(0,1fr)]">
+          <aside className="rounded-[34px] border border-slate-800/80 bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.2),transparent_30%),linear-gradient(180deg,#0f172a_0%,#111827_100%)] p-5 text-white shadow-[0_36px_90px_-50px_rgba(15,23,42,0.7)] sm:p-6 xl:sticky xl:top-6 xl:self-start">
             <div className="flex h-full flex-col">
               <div className="flex items-center gap-3">
-                <div className="rounded-2xl bg-emerald-500 p-3 text-slate-950">
+                <div className="rounded-2xl bg-sky-400/16 p-3 text-sky-200 ring-1 ring-white/10">
                   <UtensilsCrossed className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-lg font-semibold tracking-tight text-white">EatsAdmin</p>
-                  <p className="text-xs uppercase tracking-[0.22em] text-white/38">Control Center</p>
+                  <p className="text-lg font-semibold tracking-tight text-white">Admin Console</p>
+                  <p className="text-xs uppercase tracking-[0.22em] text-slate-400">Operations control</p>
                 </div>
               </div>
 
+              <p className="mt-6 text-sm leading-6 text-slate-300">
+                Monitor dispatch pressure, delivery flow, courier activity, and audit history from one workspace.
+              </p>
+
               <div className="mt-8">
-                <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-white/34">
-                  Operations
+                <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-slate-500">
+                  Navigation
                 </p>
                 <nav className="mt-3 space-y-1.5">
-                  <SidebarNavItem href="#overview" icon={ChartColumn} label="Dashboard" value={String(totalDeliveries || 0)} active />
+                  <SidebarNavItem href="#overview" icon={ChartColumn} label="Overview" value={String(totalDeliveries || 0)} active />
                   <SidebarNavItem href="#live-orders" icon={Package2} label="Orders" value={String(pendingDeliveries.length)} />
-                  <SidebarNavItem href="#watchlist" icon={AlertTriangle} label="Alerts" value={String(watchlist.length)} />
+                  <SidebarNavItem href="#watchlist" icon={AlertTriangle} label="Watchlist" value={String(watchlist.length)} />
                   <SidebarNavItem href="#drivers" icon={Truck} label="Couriers" value={String(trackableDriverDeliveries.length)} />
-                  <SidebarNavItem href="#activity" icon={Activity} label="Activity" value={String(visibleLogs.length)} />
+                  <SidebarNavItem href="#activity" icon={Activity} label="Audit trail" value={String(visibleLogs.length)} />
                 </nav>
               </div>
 
-              <div className="mt-6 rounded-[28px] border border-white/10 bg-white/[0.04] p-4">
+              <div className="mt-6 rounded-[28px] border border-white/10 bg-white/8 p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-[11px] uppercase tracking-[0.18em] text-white/36">Network posture</p>
+                    <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Network posture</p>
                     <p className="mt-3 text-2xl font-semibold tracking-tight text-white">
                       {operatingPosture.label}
                     </p>
@@ -1476,60 +1491,81 @@ export default function AdminPage() {
                     <ShieldCheck className="h-4.5 w-4.5" />
                   </div>
                 </div>
-                <p className="mt-3 text-sm leading-6 text-white/58">{operatingPosture.summary}</p>
+                <p className="mt-3 text-sm leading-6 text-slate-300">{operatingPosture.summary}</p>
                 <div className="mt-4 grid grid-cols-2 gap-2">
-                  <div className="rounded-2xl border border-white/8 bg-black/20 px-3 py-3">
-                    <p className="text-[11px] uppercase tracking-[0.16em] text-white/34">Critical</p>
+                  <div className="rounded-2xl border border-white/10 bg-slate-950/35 px-3 py-3">
+                    <p className="text-[11px] uppercase tracking-[0.16em] text-slate-500">Critical</p>
                     <p className="mt-2 text-lg font-semibold text-white">{criticalSignals}</p>
                   </div>
-                  <div className="rounded-2xl border border-white/8 bg-black/20 px-3 py-3">
-                    <p className="text-[11px] uppercase tracking-[0.16em] text-white/34">Unread</p>
+                  <div className="rounded-2xl border border-white/10 bg-slate-950/35 px-3 py-3">
+                    <p className="text-[11px] uppercase tracking-[0.16em] text-slate-500">Unread</p>
                     <p className="mt-2 text-lg font-semibold text-white">{unreadNotifications.length}</p>
                   </div>
                 </div>
               </div>
 
+              <div className="mt-4 rounded-[28px] border border-white/10 bg-white/8 p-4">
+                <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Signed in</p>
+                <p className="mt-3 text-lg font-semibold text-white">{user.fullName ?? "Admin operator"}</p>
+                <p className="mt-1 text-sm text-slate-300">Administrator account</p>
+              </div>
+
               <a
                 href="#activity"
-                className="mt-auto flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white/70 transition-colors hover:bg-white/[0.08] hover:text-white"
+                className="mt-auto flex items-center gap-3 rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-sm text-slate-300 transition-colors hover:bg-white/12 hover:text-white"
               >
                 <Settings className="h-4 w-4" />
-                Settings
+                Review audit trail
               </a>
             </div>
           </aside>
 
-          <main className="overflow-hidden rounded-[32px] border border-black/5 bg-[radial-gradient(circle_at_top_right,rgba(34,197,94,0.1),transparent_22%),linear-gradient(180deg,#faf9f5_0%,#f1efeb_100%)] shadow-[0_24px_60px_rgba(0,0,0,0.25)]">
-            <header className="border-b border-black/6 bg-white/72 px-4 py-4 backdrop-blur sm:px-6 sm:py-5">
+          <main className="overflow-hidden rounded-[34px] border border-white/80 bg-white/72 shadow-[0_44px_120px_-64px_rgba(15,23,42,0.42)] backdrop-blur-xl">
+            <header className="border-b border-slate-200/80 bg-white/82 px-4 py-4 backdrop-blur sm:px-6 sm:py-5">
               <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-black/8 bg-white text-slate-700">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-[0_14px_30px_-18px_rgba(15,23,42,0.7)]">
                     <ChartColumn className="h-5 w-5" />
                   </div>
-                  <div className="relative w-full min-w-0 sm:w-[26rem] xl:w-[32rem]">
+                  <div>
+                    <p className="text-[11px] uppercase tracking-[0.24em] text-slate-400">Admin workspace</p>
+                    <p className="mt-1 text-sm leading-6 text-slate-500">
+                      Search deliveries, couriers, and alerts across the live network.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+                  <div className="relative w-full min-w-0 lg:w-[28rem]">
                     <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                     <Input
                       value={searchQuery}
                       onChange={(event) => setSearchQuery(event.target.value)}
                       placeholder="Search orders, couriers, alerts..."
-                      className="h-12 rounded-2xl border-black/8 bg-white pl-11 pr-4 shadow-[0_8px_24px_rgba(15,23,42,0.05)]"
+                      className="h-12 rounded-2xl border-slate-200 bg-white pl-11 pr-4 text-slate-700 shadow-[0_10px_24px_-20px_rgba(15,23,42,0.45)] placeholder:text-slate-400"
                     />
                   </div>
-                </div>
 
-                <div className="flex items-center justify-between gap-3 sm:justify-end">
-                  <a
-                    href="#alerts"
-                    className="relative flex h-12 w-12 items-center justify-center rounded-2xl border border-black/8 bg-white text-slate-700"
-                    aria-label="Notifications"
-                  >
-                    <Bell className="h-4.5 w-4.5" />
-                    {unreadNotifications.length ? (
-                      <span className="absolute right-3 top-3 h-2.5 w-2.5 rounded-full bg-emerald-500" />
-                    ) : null}
-                  </a>
-                  <div className="flex h-12 min-w-[3rem] items-center justify-center rounded-2xl border border-emerald-500/15 bg-emerald-500/10 px-4 text-sm font-semibold text-emerald-700">
-                    {userInitials}
+                  <div className="flex items-center gap-3">
+                    <a
+                      href="#alerts"
+                      className="relative flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-[0_10px_24px_-20px_rgba(15,23,42,0.4)]"
+                      aria-label="Notifications"
+                    >
+                      <Bell className="h-4.5 w-4.5" />
+                      {unreadNotifications.length ? (
+                        <span className="absolute right-3 top-3 h-2.5 w-2.5 rounded-full bg-rose-500" />
+                      ) : null}
+                    </a>
+                    <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-2 shadow-[0_10px_24px_-20px_rgba(15,23,42,0.4)]">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-900 text-sm font-semibold text-white">
+                        {userInitials}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-slate-950">{user.fullName ?? "Admin operator"}</p>
+                        <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Administrator</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1538,64 +1574,136 @@ export default function AdminPage() {
             <div className="space-y-5 px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
               <section
                 id="overview"
-                className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"
+                className="grid gap-4 xl:grid-cols-[minmax(0,1.55fr)_minmax(320px,0.95fr)]"
               >
-                <div>
-                  <h1 className="text-4xl font-semibold tracking-tight text-slate-950 sm:text-[3rem]">
-                    Dashboard
-                  </h1>
-                  <p className="mt-2 max-w-2xl text-base text-slate-500">
-                    Real-time overview of your delivery network.
-                  </p>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <div className="rounded-full border border-black/8 bg-white px-3 py-1.5 text-sm text-slate-500">
+                <div className="rounded-[32px] border border-slate-800/80 bg-[radial-gradient(circle_at_top_right,rgba(14,165,233,0.18),transparent_30%),linear-gradient(135deg,#0f172a_0%,#111827_52%,#1e293b_100%)] p-6 text-white shadow-[0_40px_100px_-56px_rgba(15,23,42,0.82)] sm:p-7">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="rounded-full border border-white/10 bg-white/10 px-3 py-1.5 text-xs font-medium tracking-[0.12em] text-slate-200">
+                      Operations command
+                    </div>
+                    <div className="rounded-full border border-white/10 bg-white/10 px-3 py-1.5 text-xs font-medium tracking-[0.08em] text-slate-300">
                       Snapshot {dashboard ? formatOrderTime(dashboard.generatedAt) : "pending"}
                     </div>
                     {recentDelivery ? (
-                      <div className="rounded-full border border-black/8 bg-white px-3 py-1.5 text-sm text-slate-500">
-                        Latest intake: Delivery #{recentDelivery.id}
+                      <div className="rounded-full border border-white/10 bg-white/10 px-3 py-1.5 text-xs font-medium tracking-[0.08em] text-slate-300">
+                        Latest intake #{recentDelivery.id}
                       </div>
                     ) : null}
                   </div>
+
+                  <div className="mt-6 flex flex-col gap-6">
+                    <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+                      <div className="max-w-3xl">
+                        <h1 className="text-4xl font-semibold tracking-tight text-white sm:text-[3rem]">
+                          Delivery operations at a glance
+                        </h1>
+                        <p className="mt-3 max-w-2xl text-base leading-7 text-slate-300">
+                          Professional oversight for dispatch health, courier coverage, live order flow, and intervention history.
+                        </p>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-2 rounded-[20px] border border-white/10 bg-white/8 p-1">
+                          {analyticsWindows.map((window) => (
+                            <button
+                              key={window.value}
+                              type="button"
+                              onClick={() => setAnalyticsWindow(window.value)}
+                              className={cn(
+                                "rounded-2xl px-4 py-2.5 text-sm transition-colors",
+                                analyticsWindow === window.value
+                                  ? "bg-white text-slate-950"
+                                  : "text-slate-300 hover:bg-white/10 hover:text-white"
+                              )}
+                            >
+                              {window.label}
+                            </button>
+                          ))}
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setRefreshTick((value) => value + 1)}
+                          disabled={loading}
+                          className="border-white/10 bg-white/8 text-white hover:translate-y-0 hover:bg-white/12 hover:text-white hover:shadow-none"
+                        >
+                          <RefreshCcw className={loading ? "h-4 w-4 animate-spin" : "h-4 w-4"} />
+                          Refresh
+                        </Button>
+                        <DialogTrigger asChild>
+                          <Button type="button" className={adminSecondaryButtonClassName}>
+                            <MapPinned className="h-4 w-4" />
+                            Driver locator
+                          </Button>
+                        </DialogTrigger>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      <div className="rounded-[24px] border border-white/10 bg-white/8 p-4">
+                        <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Posture</p>
+                        <div className="mt-3 flex items-center gap-3">
+                          <div className={cn("rounded-2xl p-2.5", postureClasses.icon)}>
+                            <ShieldCheck className="h-4.5 w-4.5" />
+                          </div>
+                          <p className="text-xl font-semibold text-white">{operatingPosture.label}</p>
+                        </div>
+                        <p className="mt-3 text-sm leading-6 text-slate-300">{operatingPosture.summary}</p>
+                      </div>
+                      <div className="rounded-[24px] border border-white/10 bg-white/8 p-4">
+                        <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Delivery flow</p>
+                        <p className="mt-3 text-3xl font-semibold tracking-tight text-white">{activeDeliveries.length}</p>
+                        <p className="mt-2 text-sm leading-6 text-slate-300">
+                          Active routes with {pendingDeliveries.length} waiting on dispatch.
+                        </p>
+                      </div>
+                      <div className="rounded-[24px] border border-white/10 bg-white/8 p-4">
+                        <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Coverage</p>
+                        <p className="mt-3 text-3xl font-semibold tracking-tight text-white">{formatPercent(coverageRate)}</p>
+                        <p className="mt-2 text-sm leading-6 text-slate-300">
+                          Average route idle {activeDeliveries.length ? formatMinutes(Math.round(averageActiveMinutes)) : "0 min"}.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="flex flex-wrap gap-2">
-                  <div className="flex flex-wrap gap-2">
-                    {analyticsWindows.map((window) => (
-                      <button
-                        key={window.value}
-                        type="button"
-                        onClick={() => setAnalyticsWindow(window.value)}
-                        className={cn(
-                          "rounded-2xl border px-4 py-3 text-sm transition-colors",
-                          analyticsWindow === window.value
-                            ? "border-emerald-500/15 bg-emerald-500 text-slate-950"
-                            : "border-black/8 bg-white text-slate-700"
-                        )}
-                      >
-                        {window.label}
-                      </button>
-                    ))}
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
+                  <div className={`${adminPanelClassName} p-5`}>
+                    <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Dispatch health</p>
+                    <div className="mt-5 grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
+                      <div className={`${adminSubtlePanelClassName} p-4`}>
+                        <p className="text-sm text-slate-500">Pending dispatch</p>
+                        <p className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">{pendingDeliveries.length}</p>
+                      </div>
+                      <div className={`${adminSubtlePanelClassName} p-4`}>
+                        <p className="text-sm text-slate-500">Routes in flight</p>
+                        <p className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">{activeDeliveries.length}</p>
+                      </div>
+                      <div className={`${adminSubtlePanelClassName} p-4`}>
+                        <p className="text-sm text-slate-500">Staffed routes</p>
+                        <p className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">{activeStaffed}</p>
+                      </div>
+                    </div>
                   </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setRefreshTick((value) => value + 1)}
-                    disabled={loading}
-                    className="border-black/8 bg-white text-slate-800 hover:translate-y-0 hover:bg-slate-100 hover:shadow-none"
-                  >
-                    <RefreshCcw className={loading ? "h-4 w-4 animate-spin" : "h-4 w-4"} />
-                    Refresh
-                  </Button>
-                  <DialogTrigger asChild>
-                    <Button
-                      type="button"
-                      className="bg-emerald-500 text-slate-950 shadow-none hover:translate-y-0 hover:bg-emerald-400 hover:shadow-none"
-                    >
-                      <MapPinned className="h-4 w-4" />
-                      Driver locator
-                    </Button>
-                  </DialogTrigger>
+
+                  <div className={`${adminPanelClassName} p-5`}>
+                    <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Response targets</p>
+                    <div className="mt-5 grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
+                      <div className={`${adminSubtlePanelClassName} p-4`}>
+                        <p className="text-sm text-slate-500">Critical signals</p>
+                        <p className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">{criticalSignals}</p>
+                      </div>
+                      <div className={`${adminSubtlePanelClassName} p-4`}>
+                        <p className="text-sm text-slate-500">Watch signals</p>
+                        <p className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">{attentionSignals}</p>
+                      </div>
+                      <div className={`${adminSubtlePanelClassName} p-4`}>
+                        <p className="text-sm text-slate-500">Unread alerts</p>
+                        <p className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">{unreadNotifications.length}</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </section>
 
@@ -1678,7 +1786,7 @@ export default function AdminPage() {
                       description={`Operational feed filtered to the last ${analyticsWindow} day${analyticsWindow === 1 ? "" : "s"}.`}
                       className="overflow-hidden"
                       action={
-                        <div className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-xs text-white/68">
+                        <div className={adminChipClassName}>
                           {visibleDeliveries.length} matching deliveries
                         </div>
                       }
@@ -1692,8 +1800,8 @@ export default function AdminPage() {
                             className={cn(
                               "rounded-full border px-3 py-1.5 text-xs transition-colors",
                               statusFilter === filter.value
-                                ? "border-emerald-500/20 bg-emerald-500 text-slate-950"
-                                : "border-white/10 bg-white/[0.04] text-white/68"
+                                ? "border-slate-900 bg-slate-900 text-white"
+                                : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
                             )}
                           >
                             {filter.label}
@@ -1704,7 +1812,7 @@ export default function AdminPage() {
                         <div className="-mx-5 overflow-x-auto sm:-mx-6">
                           <table className="min-w-full border-separate border-spacing-0 text-left">
                             <thead>
-                              <tr className="border-b border-white/10 text-[11px] uppercase tracking-[0.18em] text-white/38">
+                              <tr className="border-b border-slate-200 text-[11px] uppercase tracking-[0.18em] text-slate-400">
                                 <th className="px-5 pb-4 sm:px-6">Order</th>
                                 <th className="px-5 pb-4 sm:px-6">Customer</th>
                                 <th className="px-5 pb-4 sm:px-6">Courier</th>
@@ -1720,37 +1828,37 @@ export default function AdminPage() {
                                 <tr
                                   key={delivery.id}
                                   className={cn(
-                                    "align-top text-sm text-white/72 transition-colors",
-                                    selectedDeliveryId === delivery.id ? "bg-white/[0.03]" : ""
+                                    "align-top text-sm text-slate-700 transition-colors hover:bg-slate-50/70",
+                                    selectedDeliveryId === delivery.id ? "bg-sky-50/70" : ""
                                   )}
                                 >
-                                  <td className="border-t border-white/8 px-5 py-5 sm:px-6">
-                                    <p className="font-medium text-white">UE-{delivery.id}</p>
+                                  <td className="border-t border-slate-200/80 px-5 py-5 sm:px-6">
+                                    <p className="font-medium text-slate-950">UE-{delivery.id}</p>
                                   </td>
-                                  <td className="border-t border-white/8 px-5 py-5 sm:px-6">
+                                  <td className="border-t border-slate-200/80 px-5 py-5 sm:px-6">
                                     {delivery.customer?.name ?? "Guest customer"}
                                   </td>
-                                  <td className="border-t border-white/8 px-5 py-5 sm:px-6">
+                                  <td className="border-t border-slate-200/80 px-5 py-5 sm:px-6">
                                     {delivery.driver?.name ?? "Unassigned"}
                                   </td>
-                                  <td className="border-t border-white/8 px-5 py-5 sm:px-6">
+                                  <td className="border-t border-slate-200/80 px-5 py-5 sm:px-6">
                                     <p className="max-w-[20rem] truncate">{delivery.pickupAddress}</p>
-                                    <p className="mt-1 max-w-[20rem] truncate text-white/42">{delivery.dropoffAddress}</p>
+                                    <p className="mt-1 max-w-[20rem] truncate text-slate-400">{delivery.dropoffAddress}</p>
                                   </td>
-                                  <td className="border-t border-white/8 px-5 py-5 sm:px-6">{delivery.priceDisplay}</td>
-                                  <td className="border-t border-white/8 px-5 py-5 sm:px-6">
+                                  <td className="border-t border-slate-200/80 px-5 py-5 sm:px-6">{delivery.priceDisplay}</td>
+                                  <td className="border-t border-slate-200/80 px-5 py-5 sm:px-6">
                                     <StatusPill status={delivery.status} />
                                   </td>
-                                  <td className="border-t border-white/8 px-5 py-5 text-white/48 sm:px-6">
+                                  <td className="border-t border-slate-200/80 px-5 py-5 text-slate-400 sm:px-6">
                                     {formatOrderTime(delivery.updatedAt)}
                                   </td>
-                                  <td className="border-t border-white/8 px-5 py-5 sm:px-6">
+                                  <td className="border-t border-slate-200/80 px-5 py-5 sm:px-6">
                                     <Button
                                       type="button"
                                       variant="outline"
                                       size="sm"
                                       onClick={() => setSelectedDeliveryId(delivery.id)}
-                                      className="border-white/10 bg-white/[0.05] text-white hover:translate-y-0 hover:bg-white/[0.08] hover:text-white hover:shadow-none"
+                                      className={adminOutlineButtonClassName}
                                     >
                                       Operate
                                     </Button>
@@ -1761,7 +1869,7 @@ export default function AdminPage() {
                           </table>
                         </div>
                       ) : (
-                        <div className="rounded-[24px] border border-dashed border-white/10 bg-white/[0.03] p-5 text-sm leading-6 text-white/58">
+                        <div className="rounded-[24px] border border-dashed border-slate-200 bg-slate-50/80 p-5 text-sm leading-6 text-slate-500">
                           No deliveries match the current search and status filters.
                         </div>
                       )}
@@ -1772,7 +1880,7 @@ export default function AdminPage() {
                       title="Watchlist"
                       description="Prioritized by route age, dispatch lag, and unread notifications."
                       action={
-                        <div className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-xs text-white/68">
+                        <div className={adminChipClassName}>
                           {watchlist.length} open
                         </div>
                       }
@@ -1790,33 +1898,33 @@ export default function AdminPage() {
                                 <div className="flex items-start justify-between gap-3">
                                   <div className="min-w-0">
                                     <div className="flex flex-wrap items-center gap-2">
-                                      <div className="text-[11px] uppercase tracking-[0.18em] text-white/40">
+                                      <div className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
                                         {item.sourceLabel}
                                       </div>
                                       <div className={cn("rounded-full border px-3 py-1 text-xs", styles.badge)}>
                                         {toneLabel(item.tone)}
                                       </div>
                                     </div>
-                                    <p className="mt-3 text-base font-semibold tracking-tight text-white">
+                                    <p className="mt-3 text-base font-semibold tracking-tight text-slate-950">
                                       {item.title}
                                     </p>
-                                    <p className="mt-2 text-sm leading-6 text-white/58">{item.summary}</p>
+                                    <p className="mt-2 text-sm leading-6 text-slate-600">{item.summary}</p>
                                   </div>
                                   <div className={cn("rounded-2xl p-2.5", styles.icon)}>
                                     <AlertTriangle className="h-4.5 w-4.5" />
                                   </div>
                                 </div>
                                 <div className="mt-4 flex flex-wrap gap-2">
-                                  <div className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white/58">
+                                  <div className={cn(adminChipClassName, "py-1")}>
                                     Owner: {item.owner}
                                   </div>
-                                  <div className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white/58">
+                                  <div className={cn(adminChipClassName, "py-1")}>
                                     {item.timestamp}
                                   </div>
                                   {item.metadata.map((meta) => (
                                     <div
                                       key={`${item.id}-${meta}`}
-                                      className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white/58"
+                                      className={cn(adminChipClassName, "py-1")}
                                     >
                                       {meta}
                                     </div>
@@ -1826,7 +1934,7 @@ export default function AdminPage() {
                             );
                           })
                         ) : (
-                          <div className="rounded-[24px] border border-dashed border-white/10 bg-white/[0.03] p-5 text-sm leading-6 text-white/58">
+                          <div className="rounded-[24px] border border-dashed border-slate-200 bg-slate-50/80 p-5 text-sm leading-6 text-slate-500">
                             No open escalations. Dispatch, route aging, and inbox pressure are all inside tolerance.
                           </div>
                         )}
@@ -1841,7 +1949,7 @@ export default function AdminPage() {
                       description={`Alerts created in the last ${analyticsWindow} day${analyticsWindow === 1 ? "" : "s"}.`}
                       action={
                         <div className="flex flex-wrap gap-2">
-                          <div className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-xs text-white/68">
+                          <div className={adminChipClassName}>
                             {unreadNotifications.length} unread
                           </div>
                           <Button
@@ -1850,7 +1958,7 @@ export default function AdminPage() {
                             size="sm"
                             onClick={handleMarkAllNotificationsRead}
                             disabled={actionState === "reading" || !unreadNotifications.length}
-                            className="border-white/10 bg-white/[0.05] text-white hover:translate-y-0 hover:bg-white/[0.08] hover:text-white hover:shadow-none"
+                            className={adminOutlineButtonClassName}
                           >
                             Mark all read
                           </Button>
@@ -1866,18 +1974,18 @@ export default function AdminPage() {
                             return (
                               <div
                                 key={notification.id}
-                                className="rounded-[24px] border border-white/8 bg-white/[0.03] p-4"
+                                className={`${adminSubtlePanelClassName} p-4`}
                               >
                                 <div className="flex items-start justify-between gap-3">
                                   <div className="min-w-0">
-                                    <p className="font-semibold text-white">{notification.type}</p>
-                                    <p className="mt-2 text-sm leading-6 text-white/58">{notification.message}</p>
+                                    <p className="font-semibold text-slate-950">{notification.type}</p>
+                                    <p className="mt-2 text-sm leading-6 text-slate-600">{notification.message}</p>
                                   </div>
                                   <div
                                     className={cn(
                                       "rounded-full border px-3 py-1 text-xs",
                                       notification.readAt
-                                        ? "border-white/10 bg-white/[0.05] text-white/58"
+                                        ? "border-slate-200 bg-white text-slate-500"
                                         : notificationPillClasses(tone)
                                     )}
                                   >
@@ -1885,12 +1993,12 @@ export default function AdminPage() {
                                   </div>
                                 </div>
                                 <div className="mt-4 flex flex-wrap gap-2">
-                                  <div className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white/58">
+                                  <div className={cn(adminChipClassName, "py-1")}>
                                     {formatOrderTime(notification.createdAt)}
                                   </div>
                                   {!notification.readAt ? (
                                     <>
-                                      <div className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white/58">
+                                      <div className={cn(adminChipClassName, "py-1")}>
                                         Open {formatMinutes(ageMinutes)}
                                       </div>
                                       <Button
@@ -1899,7 +2007,7 @@ export default function AdminPage() {
                                         variant="outline"
                                         onClick={() => handleMarkNotificationRead(notification.id)}
                                         disabled={actionState === "reading"}
-                                        className="h-8 rounded-full border-white/10 bg-white/[0.05] px-3 text-white hover:translate-y-0 hover:bg-white/[0.08] hover:text-white hover:shadow-none"
+                                        className={cn(adminOutlineButtonClassName, "h-8 rounded-full px-3")}
                                       >
                                         Mark read
                                       </Button>
@@ -1910,7 +2018,7 @@ export default function AdminPage() {
                             );
                           })
                         ) : (
-                          <div className="rounded-[24px] border border-dashed border-white/10 bg-white/[0.03] p-5 text-sm leading-6 text-white/58">
+                          <div className="rounded-[24px] border border-dashed border-slate-200 bg-slate-50/80 p-5 text-sm leading-6 text-slate-500">
                             No alerts were created inside the current analytics window.
                           </div>
                         )}
@@ -1926,7 +2034,7 @@ export default function AdminPage() {
                           <Button
                             type="button"
                             variant="outline"
-                            className="border-white/10 bg-white/[0.05] text-white hover:translate-y-0 hover:bg-white/[0.08] hover:text-white hover:shadow-none"
+                            className={adminOutlineButtonClassName}
                           >
                             <MapPinned className="h-4 w-4" />
                             Open locator
@@ -1936,21 +2044,21 @@ export default function AdminPage() {
                     >
                       <div className="grid gap-3">
                         <div className="grid gap-3 sm:grid-cols-2">
-                          <div className="rounded-[22px] border border-white/8 bg-white/[0.03] p-4">
-                            <p className="text-[11px] uppercase tracking-[0.16em] text-white/38">GPS coverage</p>
-                            <p className="mt-3 text-2xl font-semibold tracking-tight text-white">
+                          <div className={`${adminSubtlePanelClassName} p-4`}>
+                            <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">GPS coverage</p>
+                            <p className="mt-3 text-2xl font-semibold tracking-tight text-slate-950">
                               {formatPercent(gpsCoverageRate)}
                             </p>
-                            <p className="mt-2 text-sm leading-6 text-white/55">
+                            <p className="mt-2 text-sm leading-6 text-slate-600">
                               {trackableDriverDeliveries.length} of {activeDeliveries.length || 0} active routes are trackable.
                             </p>
                           </div>
-                          <div className="rounded-[22px] border border-white/8 bg-white/[0.03] p-4">
-                            <p className="text-[11px] uppercase tracking-[0.16em] text-white/38">Route idle</p>
-                            <p className="mt-3 text-2xl font-semibold tracking-tight text-white">
+                          <div className={`${adminSubtlePanelClassName} p-4`}>
+                            <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Route idle</p>
+                            <p className="mt-3 text-2xl font-semibold tracking-tight text-slate-950">
                               {activeDeliveries.length ? formatMinutes(Math.round(averageActiveMinutes)) : "Clear"}
                             </p>
-                            <p className="mt-2 text-sm leading-6 text-white/55">
+                            <p className="mt-2 text-sm leading-6 text-slate-600">
                               Longest idle route is {activeDeliveries.length ? formatMinutes(longestActiveMinutes) : "0 min"}.
                             </p>
                           </div>
@@ -1960,27 +2068,27 @@ export default function AdminPage() {
                           trackableDriverDeliveries.slice(0, 3).map((delivery) => (
                             <div
                               key={`driver-preview-${delivery.id}`}
-                              className="rounded-[24px] border border-white/8 bg-white/[0.03] p-4"
+                              className={`${adminSubtlePanelClassName} p-4`}
                             >
                               <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0">
-                                  <p className="font-semibold text-white">
+                                  <p className="font-semibold text-slate-950">
                                     {delivery.driver?.name ?? "Assigned courier"}
                                   </p>
-                                  <p className="mt-1 text-sm text-white/55">
+                                  <p className="mt-1 text-sm text-slate-600">
                                     Delivery #{delivery.id} • {formatStatusLabel(delivery.status)}
                                   </p>
                                 </div>
-                                <div className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-xs text-white/58">
+                                <div className={cn(adminChipClassName, "py-1")}>
                                   {formatMinutes(minutesSince(delivery.updatedAt))}
                                 </div>
                               </div>
-                              <p className="mt-3 truncate text-sm text-white/55">{delivery.pickupAddress}</p>
-                              <p className="mt-1 truncate text-sm text-white/38">{delivery.dropoffAddress}</p>
+                              <p className="mt-3 truncate text-sm text-slate-600">{delivery.pickupAddress}</p>
+                              <p className="mt-1 truncate text-sm text-slate-400">{delivery.dropoffAddress}</p>
                             </div>
                           ))
                         ) : (
-                          <div className="rounded-[24px] border border-dashed border-white/10 bg-white/[0.03] p-5 text-sm leading-6 text-white/58">
+                          <div className="rounded-[24px] border border-dashed border-slate-200 bg-slate-50/80 p-5 text-sm leading-6 text-slate-500">
                             No drivers are currently in motion. Open routes will appear here once couriers accept work.
                           </div>
                         )}
@@ -1992,19 +2100,19 @@ export default function AdminPage() {
                       title="Audit trail"
                       description="Recent status transitions and who made them."
                       action={
-                        <div className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-xs text-white/68">
+                        <div className={adminChipClassName}>
                           {visibleLogs.length} recent
                         </div>
                       }
                     >
                       <div className="mb-4 flex flex-wrap gap-2">
-                        <div className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white/58">
+                        <div className={cn(adminChipClassName, "py-1")}>
                           {adminInterventions} admin interventions
                         </div>
-                        <div className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white/58">
+                        <div className={cn(adminChipClassName, "py-1")}>
                           {driverTransitions} driver transitions
                         </div>
-                        <div className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white/58">
+                        <div className={cn(adminChipClassName, "py-1")}>
                           {systemEvents} system events
                         </div>
                       </div>
@@ -2014,14 +2122,14 @@ export default function AdminPage() {
                           visibleLogs.map((entry) => (
                             <div
                               key={entry.id}
-                              className="rounded-[24px] border border-white/8 bg-white/[0.03] p-4"
+                              className={`${adminSubtlePanelClassName} p-4`}
                             >
                               <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0">
-                                  <p className="font-semibold text-white">
+                                  <p className="font-semibold text-slate-950">
                                     Delivery #{entry.deliveryId} moved to {formatStatusLabel(entry.status)}
                                   </p>
-                                  <p className="mt-2 text-sm text-white/55">
+                                  <p className="mt-2 text-sm text-slate-600">
                                     {entry.changedBy
                                       ? `${entry.changedBy.name} • ${formatStatusLabel(entry.changedBy.role)}`
                                       : "System event"}
@@ -2030,15 +2138,15 @@ export default function AdminPage() {
                                 <StatusPill status={entry.status} />
                               </div>
                               {entry.note ? (
-                                <p className="mt-3 text-sm leading-6 text-white/55">{entry.note}</p>
+                                <p className="mt-3 text-sm leading-6 text-slate-600">{entry.note}</p>
                               ) : null}
-                              <p className="mt-4 text-xs uppercase tracking-[0.16em] text-white/34">
+                              <p className="mt-4 text-xs uppercase tracking-[0.16em] text-slate-400">
                                 {formatOrderTime(entry.createdAt)}
                               </p>
                             </div>
                           ))
                         ) : (
-                          <div className="rounded-[24px] border border-dashed border-white/10 bg-white/[0.03] p-5 text-sm leading-6 text-white/58">
+                          <div className="rounded-[24px] border border-dashed border-slate-200 bg-slate-50/80 p-5 text-sm leading-6 text-slate-500">
                             No activity has been logged yet. Status transitions will appear here as deliveries move.
                           </div>
                         )}
@@ -2054,8 +2162,8 @@ export default function AdminPage() {
         </div>
       </div>
 
-      <DialogContent className="w-[min(96vw,82rem)] max-h-[92vh] overflow-hidden border border-black/10 bg-[radial-gradient(circle_at_top_right,rgba(34,197,94,0.08),transparent_20%),linear-gradient(180deg,#faf9f5_0%,#f1efeb_100%)] p-0 text-slate-900">
-        <div className="border-b border-black/8 bg-white/72 px-6 py-5 backdrop-blur sm:px-7">
+      <DialogContent className="w-[min(96vw,82rem)] max-h-[92vh] overflow-hidden border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-0 text-slate-900 shadow-[0_44px_120px_-70px_rgba(15,23,42,0.5)]">
+        <div className="border-b border-slate-200 bg-white/88 px-6 py-5 backdrop-blur sm:px-7">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <DialogHeader className="max-w-3xl">
               <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Driver locator</p>
@@ -2066,7 +2174,7 @@ export default function AdminPage() {
               </DialogDescription>
             </DialogHeader>
             <div className="flex flex-wrap gap-2">
-              <div className="rounded-full border border-black/8 bg-white px-4 py-2 text-sm text-slate-600">
+              <div className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600">
                 {trackableDriverDeliveries.length} trackable drivers
               </div>
               <Button
@@ -2074,7 +2182,7 @@ export default function AdminPage() {
                 variant="outline"
                 onClick={() => setLocatorRefreshTick((value) => value + 1)}
                 disabled={driverLocatorLoading}
-                className="border-black/8 bg-white text-slate-800 hover:translate-y-0 hover:bg-slate-100 hover:shadow-none"
+                className={adminOutlineButtonClassName}
               >
                 <RefreshCcw className={driverLocatorLoading ? "h-4 w-4 animate-spin" : "h-4 w-4"} />
                 Refresh locations
@@ -2096,7 +2204,7 @@ export default function AdminPage() {
                 (_, index) => (
                   <div
                     key={`driver-locator-skeleton-${index}`}
-                    className="h-[520px] animate-pulse rounded-[30px] bg-[#dbd8d0]"
+                    className="h-[520px] animate-pulse rounded-[30px] bg-slate-200/80"
                   />
                 )
               )}
@@ -2111,15 +2219,15 @@ export default function AdminPage() {
                 return (
                   <div
                     key={`driver-locator-${record.delivery.id}`}
-                    className="rounded-[30px] border border-white/8 bg-[#151515] p-5 text-white shadow-[0_24px_50px_rgba(0,0,0,0.22)]"
+                    className={`${adminPanelClassName} p-5`}
                   >
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
-                        <p className="text-[11px] uppercase tracking-[0.18em] text-white/38">Driver</p>
-                        <p className="mt-2 text-2xl font-semibold tracking-tight text-white">
+                        <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Driver</p>
+                        <p className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">
                           {record.delivery.driver?.name ?? "Assigned courier"}
                         </p>
-                        <p className="mt-1 text-sm text-white/55">
+                        <p className="mt-1 text-sm text-slate-600">
                           {record.delivery.driver?.email ?? "No email available"}
                         </p>
                       </div>
@@ -2135,54 +2243,54 @@ export default function AdminPage() {
                       <div className="space-y-4">
                         <div className="grid gap-3 sm:grid-cols-2">
                           <div className={cn("rounded-[22px] border p-4", styles.panel)}>
-                            <p className="text-[11px] uppercase tracking-[0.18em] text-white/40">ETA</p>
-                            <p className="mt-2 text-lg font-semibold text-white">
+                            <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">ETA</p>
+                            <p className="mt-2 text-lg font-semibold text-slate-950">
                               {formatEtaSeconds(record.tracking.estimatedEtaSeconds)}
                             </p>
                           </div>
                           <div className={cn("rounded-[22px] border p-4", styles.panel)}>
-                            <p className="text-[11px] uppercase tracking-[0.18em] text-white/40">Remaining</p>
-                            <p className="mt-2 text-lg font-semibold text-white">
+                            <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Remaining</p>
+                            <p className="mt-2 text-lg font-semibold text-slate-950">
                               {formatDistanceKm(record.tracking.remainingDistanceKm)}
                             </p>
                           </div>
                           <div className={cn("rounded-[22px] border p-4", styles.panel)}>
-                            <p className="text-[11px] uppercase tracking-[0.18em] text-white/40">Progress</p>
-                            <p className="mt-2 text-lg font-semibold text-white">
+                            <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Progress</p>
+                            <p className="mt-2 text-lg font-semibold text-slate-950">
                               {formatPercent(record.tracking.progress)}
                             </p>
                           </div>
                           <div className={cn("rounded-[22px] border p-4", styles.panel)}>
-                            <p className="text-[11px] uppercase tracking-[0.18em] text-white/40">Last movement</p>
-                            <p className="mt-2 text-lg font-semibold text-white">{formatMinutes(idleMinutes)}</p>
+                            <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Last movement</p>
+                            <p className="mt-2 text-lg font-semibold text-slate-950">{formatMinutes(idleMinutes)}</p>
                           </div>
                         </div>
 
-                        <div className="rounded-[22px] border border-white/8 bg-white/[0.03] p-4">
+                        <div className={`${adminSubtlePanelClassName} p-4`}>
                           <div className="flex flex-wrap items-center gap-2">
-                            <div className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white/58">
+                            <div className={cn(adminChipClassName, "py-1")}>
                               Delivery #{record.delivery.id}
                             </div>
-                            <div className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white/58">
+                            <div className={cn(adminChipClassName, "py-1")}>
                               {formatOrderTime(record.delivery.updatedAt)}
                             </div>
-                            <div className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white/58">
+                            <div className={cn(adminChipClassName, "py-1")}>
                               {record.tracking.points.length} route points
                             </div>
                           </div>
-                          <p className="mt-4 text-sm leading-6 text-white/58">
+                          <p className="mt-4 text-sm leading-6 text-slate-600">
                             {describeActivity(record.latestActivity)}
                           </p>
-                          <div className="mt-4 rounded-[18px] border border-white/8 bg-black/20 p-3 text-sm text-white/58">
+                          <div className="mt-4 rounded-[18px] border border-slate-200 bg-white p-3 text-sm text-slate-600">
                             <p className="truncate">{record.delivery.pickupAddress}</p>
-                            <p className="mt-1 truncate text-white/42">{record.delivery.dropoffAddress}</p>
+                            <p className="mt-1 truncate text-slate-400">{record.delivery.dropoffAddress}</p>
                           </div>
                         </div>
 
                         <Button
                           asChild
                           variant="outline"
-                          className="border-white/10 bg-white/[0.05] text-white hover:translate-y-0 hover:bg-white/[0.08] hover:text-white hover:shadow-none"
+                          className={adminOutlineButtonClassName}
                         >
                           <a
                             href={`https://www.google.com/maps?q=${record.tracking.currentLatitude},${record.tracking.currentLongitude}`}
@@ -2202,7 +2310,7 @@ export default function AdminPage() {
               })}
             </div>
           ) : (
-            <div className="rounded-[30px] border border-dashed border-black/10 bg-white/70 p-6 text-sm leading-6 text-slate-600">
+            <div className="rounded-[30px] border border-dashed border-slate-200 bg-slate-50/80 p-6 text-sm leading-6 text-slate-600">
               {activeDeliveries.length
                 ? "There are active routes, but none currently have a courier attached, so there is no live GPS position to locate."
                 : "No drivers are currently in motion. Once a courier accepts a route, GPS location and activity will appear here."}
@@ -2221,22 +2329,22 @@ export default function AdminPage() {
       >
         <SheetContent
           side="right"
-          className="w-[96vw] max-w-[44rem] overflow-y-auto border-white/10 bg-[#121212] p-0 text-white"
+          className="w-[96vw] max-w-[44rem] overflow-y-auto border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-0 text-slate-900"
         >
           {selectedDelivery ? (
             <div className="min-h-full">
-              <div className="border-b border-white/10 px-6 py-5">
+              <div className="border-b border-slate-200 bg-white/88 px-6 py-5">
                 <SheetHeader className="mb-0 pr-10">
                   <div className="flex flex-wrap items-center gap-2">
-                    <div className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-xs text-white/62">
+                    <div className={cn(adminChipClassName, "py-1")}>
                       Delivery desk
                     </div>
                     <StatusPill status={selectedDelivery.status} />
                   </div>
-                  <SheetTitle className="mt-3 font-sans text-[1.7rem] font-semibold tracking-tight text-white">
+                  <SheetTitle className="mt-3 font-sans text-[1.7rem] font-semibold tracking-tight text-slate-950">
                     Delivery #{selectedDelivery.id}
                   </SheetTitle>
-                  <SheetDescription className="text-sm leading-6 text-white/58">
+                  <SheetDescription className="text-sm leading-6 text-slate-600">
                     Use this panel to review live route details, assign a driver, and advance delivery status with audit notes.
                   </SheetDescription>
                 </SheetHeader>
@@ -2244,80 +2352,80 @@ export default function AdminPage() {
 
               <div className="space-y-5 px-6 py-5">
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-[24px] border border-white/8 bg-white/[0.03] p-4">
-                    <p className="text-[11px] uppercase tracking-[0.16em] text-white/38">Customer</p>
-                    <p className="mt-3 text-lg font-semibold text-white">
+                  <div className={`${adminSubtlePanelClassName} p-4`}>
+                    <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Customer</p>
+                    <p className="mt-3 text-lg font-semibold text-slate-950">
                       {selectedDelivery.customer?.name ?? "Guest customer"}
                     </p>
-                    <p className="mt-1 text-sm text-white/55">
+                    <p className="mt-1 text-sm text-slate-600">
                       {selectedDelivery.customer?.email ?? "No customer email"}
                     </p>
                   </div>
-                  <div className="rounded-[24px] border border-white/8 bg-white/[0.03] p-4">
-                    <p className="text-[11px] uppercase tracking-[0.16em] text-white/38">Courier</p>
-                    <p className="mt-3 text-lg font-semibold text-white">
+                  <div className={`${adminSubtlePanelClassName} p-4`}>
+                    <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Courier</p>
+                    <p className="mt-3 text-lg font-semibold text-slate-950">
                       {selectedDelivery.driver?.name ?? "Unassigned"}
                     </p>
-                    <p className="mt-1 text-sm text-white/55">
+                    <p className="mt-1 text-sm text-slate-600">
                       {selectedDelivery.driver?.email ?? "Awaiting assignment"}
                     </p>
                   </div>
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-3">
-                  <div className="rounded-[22px] border border-white/8 bg-white/[0.03] p-4">
-                    <p className="text-[11px] uppercase tracking-[0.16em] text-white/38">Total</p>
-                    <p className="mt-3 text-xl font-semibold text-white">{selectedDelivery.priceDisplay}</p>
+                  <div className={`${adminSubtlePanelClassName} p-4`}>
+                    <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Total</p>
+                    <p className="mt-3 text-xl font-semibold text-slate-950">{selectedDelivery.priceDisplay}</p>
                   </div>
-                  <div className="rounded-[22px] border border-white/8 bg-white/[0.03] p-4">
-                    <p className="text-[11px] uppercase tracking-[0.16em] text-white/38">Distance</p>
-                    <p className="mt-3 text-xl font-semibold text-white">
+                  <div className={`${adminSubtlePanelClassName} p-4`}>
+                    <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Distance</p>
+                    <p className="mt-3 text-xl font-semibold text-slate-950">
                       {formatDistanceKm(selectedDelivery.estimatedDistanceKm)}
                     </p>
                   </div>
-                  <div className="rounded-[22px] border border-white/8 bg-white/[0.03] p-4">
-                    <p className="text-[11px] uppercase tracking-[0.16em] text-white/38">Updated</p>
-                    <p className="mt-3 text-sm font-semibold text-white">
+                  <div className={`${adminSubtlePanelClassName} p-4`}>
+                    <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Updated</p>
+                    <p className="mt-3 text-sm font-semibold text-slate-950">
                       {formatOrderTime(selectedDelivery.updatedAt)}
                     </p>
                   </div>
                 </div>
 
-                <div className="rounded-[24px] border border-white/8 bg-white/[0.03] p-4">
-                  <p className="text-[11px] uppercase tracking-[0.16em] text-white/38">Route</p>
-                  <p className="mt-3 text-sm text-white/62">{selectedDelivery.pickupAddress}</p>
-                  <p className="mt-1 text-sm text-white/38">{selectedDelivery.dropoffAddress}</p>
+                <div className={`${adminSubtlePanelClassName} p-4`}>
+                  <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Route</p>
+                  <p className="mt-3 text-sm text-slate-600">{selectedDelivery.pickupAddress}</p>
+                  <p className="mt-1 text-sm text-slate-400">{selectedDelivery.dropoffAddress}</p>
                 </div>
 
                 {selectedDeliveryError ? (
-                  <div className="rounded-[24px] border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+                  <div className="rounded-[24px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
                     {selectedDeliveryError}
                   </div>
                 ) : null}
 
                 {selectedDeliveryLoading ? (
-                  <div className="h-[260px] animate-pulse rounded-[24px] bg-white/[0.06]" />
+                  <div className="h-[260px] animate-pulse rounded-[24px] bg-slate-200/80" />
                 ) : selectedDeliveryTracking ? (
                   <DriverRouteMap tracking={selectedDeliveryTracking} />
                 ) : null}
 
                 {selectedDelivery.status === "pending" && !selectedDelivery.driverId ? (
-                  <div className="rounded-[28px] border border-white/8 bg-white/[0.03] p-5">
+                  <div className={`${adminPanelClassName} p-5`}>
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <h3 className="text-lg font-semibold text-white">Assign driver</h3>
-                        <p className="mt-1 text-sm leading-6 text-white/55">
+                        <h3 className="text-lg font-semibold text-slate-950">Assign driver</h3>
+                        <p className="mt-1 text-sm leading-6 text-slate-600">
                           Pending deliveries need a real courier assignment before they can move forward.
                         </p>
                       </div>
-                      <div className="rounded-full border border-amber-400/20 bg-amber-400/10 px-3 py-1 text-xs text-amber-100">
+                      <div className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs text-amber-700">
                         Pending
                       </div>
                     </div>
 
                     <div className="mt-4 space-y-4">
                       <div>
-                        <p className="mb-2 text-[11px] uppercase tracking-[0.16em] text-white/38">Driver</p>
+                        <p className="mb-2 text-[11px] uppercase tracking-[0.16em] text-slate-400">Driver</p>
                         <select
                           className={adminSelectClassName}
                           value={selectedDriverId}
@@ -2333,12 +2441,12 @@ export default function AdminPage() {
                       </div>
 
                       <div>
-                        <p className="mb-2 text-[11px] uppercase tracking-[0.16em] text-white/38">Audit note</p>
+                        <p className="mb-2 text-[11px] uppercase tracking-[0.16em] text-slate-400">Audit note</p>
                         <Textarea
                           value={actionNote}
                           onChange={(event) => setActionNote(event.target.value)}
                           placeholder="Optional note explaining why this assignment was made."
-                          className="min-h-[110px] border-white/10 bg-white/[0.06] text-white placeholder:text-white/35"
+                          className="min-h-[110px] border-slate-200 bg-white text-slate-700 placeholder:text-slate-400"
                         />
                       </div>
 
@@ -2346,34 +2454,34 @@ export default function AdminPage() {
                         type="button"
                         onClick={handleAssignSelectedDelivery}
                         disabled={actionState !== "idle" || !sortedDrivers.length}
-                        className="bg-emerald-500 text-slate-950 hover:translate-y-0 hover:bg-emerald-400 hover:shadow-none"
+                        className={adminPrimaryButtonClassName}
                       >
                         {actionState === "assigning" ? "Assigning..." : "Assign driver"}
                       </Button>
                     </div>
                   </div>
                 ) : selectedDeliveryNextStatus ? (
-                  <div className="rounded-[28px] border border-white/8 bg-white/[0.03] p-5">
+                  <div className={`${adminPanelClassName} p-5`}>
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <h3 className="text-lg font-semibold text-white">Advance delivery</h3>
-                        <p className="mt-1 text-sm leading-6 text-white/55">
+                        <h3 className="text-lg font-semibold text-slate-950">Advance delivery</h3>
+                        <p className="mt-1 text-sm leading-6 text-slate-600">
                           Move this order to the next allowed backend status and record an admin note.
                         </p>
                       </div>
-                      <div className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs text-emerald-200">
+                      <div className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs text-emerald-700">
                         Next: {formatStatusLabel(selectedDeliveryNextStatus)}
                       </div>
                     </div>
 
                     <div className="mt-4 space-y-4">
                       <div>
-                        <p className="mb-2 text-[11px] uppercase tracking-[0.16em] text-white/38">Audit note</p>
+                        <p className="mb-2 text-[11px] uppercase tracking-[0.16em] text-slate-400">Audit note</p>
                         <Textarea
                           value={actionNote}
                           onChange={(event) => setActionNote(event.target.value)}
                           placeholder={`Optional note for moving this delivery to ${formatStatusLabel(selectedDeliveryNextStatus)}.`}
-                          className="min-h-[110px] border-white/10 bg-white/[0.06] text-white placeholder:text-white/35"
+                          className="min-h-[110px] border-slate-200 bg-white text-slate-700 placeholder:text-slate-400"
                         />
                       </div>
 
@@ -2381,7 +2489,7 @@ export default function AdminPage() {
                         type="button"
                         onClick={handleAdvanceSelectedDelivery}
                         disabled={actionState !== "idle"}
-                        className="bg-emerald-500 text-slate-950 hover:translate-y-0 hover:bg-emerald-400 hover:shadow-none"
+                        className={adminPrimaryButtonClassName}
                       >
                         {actionState === "updating"
                           ? "Updating..."
@@ -2390,18 +2498,18 @@ export default function AdminPage() {
                     </div>
                   </div>
                 ) : (
-                  <div className="rounded-[24px] border border-white/8 bg-white/[0.03] p-4 text-sm leading-6 text-white/58">
+                  <div className="rounded-[24px] border border-slate-200 bg-slate-50/80 p-4 text-sm leading-6 text-slate-600">
                     This delivery is already delivered. Use the timeline below for audit review.
                   </div>
                 )}
 
-                <div className="rounded-[28px] border border-white/8 bg-white/[0.03] p-5">
+                <div className={`${adminPanelClassName} p-5`}>
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <h3 className="text-lg font-semibold text-white">Status history</h3>
-                      <p className="mt-1 text-sm text-white/55">Every backend transition recorded for this delivery.</p>
+                      <h3 className="text-lg font-semibold text-slate-950">Status history</h3>
+                      <p className="mt-1 text-sm text-slate-600">Every backend transition recorded for this delivery.</p>
                     </div>
-                    <div className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-xs text-white/62">
+                    <div className={cn(adminChipClassName, "py-1")}>
                       {selectedDeliveryHistory.length} events
                     </div>
                   </div>
@@ -2411,28 +2519,28 @@ export default function AdminPage() {
                       selectedDeliveryHistory.map((entry) => (
                         <div
                           key={entry.id}
-                          className="rounded-[22px] border border-white/8 bg-black/20 p-4"
+                          className={`${adminSubtlePanelClassName} p-4`}
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div>
-                              <p className="font-semibold text-white">{formatStatusLabel(entry.status)}</p>
-                              <p className="mt-1 text-sm text-white/55">
+                              <p className="font-semibold text-slate-950">{formatStatusLabel(entry.status)}</p>
+                              <p className="mt-1 text-sm text-slate-600">
                                 {entry.changedBy
                                   ? `${entry.changedBy.name} • ${formatStatusLabel(entry.changedBy.role)}`
                                   : "System event"}
                               </p>
                             </div>
-                            <p className="text-xs uppercase tracking-[0.16em] text-white/34">
+                            <p className="text-xs uppercase tracking-[0.16em] text-slate-400">
                               {formatOrderTime(entry.createdAt)}
                             </p>
                           </div>
                           {entry.note ? (
-                            <p className="mt-3 text-sm leading-6 text-white/58">{entry.note}</p>
+                            <p className="mt-3 text-sm leading-6 text-slate-600">{entry.note}</p>
                           ) : null}
                         </div>
                       ))
                     ) : (
-                      <div className="rounded-[22px] border border-dashed border-white/10 bg-black/20 p-4 text-sm leading-6 text-white/58">
+                      <div className="rounded-[22px] border border-dashed border-slate-200 bg-slate-50/80 p-4 text-sm leading-6 text-slate-600">
                         No history is available for this delivery yet.
                       </div>
                     )}
@@ -2443,7 +2551,7 @@ export default function AdminPage() {
                   <Button
                     asChild
                     variant="outline"
-                    className="border-white/10 bg-white/[0.05] text-white hover:translate-y-0 hover:bg-white/[0.08] hover:text-white hover:shadow-none"
+                    className={adminOutlineButtonClassName}
                   >
                     <a
                       href={`https://www.google.com/maps?q=${selectedDeliveryTracking.currentLatitude},${selectedDeliveryTracking.currentLongitude}`}
