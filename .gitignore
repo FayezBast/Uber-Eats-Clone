@@ -24,6 +24,7 @@ delivery-frontend/*.tsbuildinfo
 .env.*.local
 delivery-backend/.env
 delivery-frontend/.env.local
+delivery-backend/.seed-accounts.local
 !.env.example
 !delivery-backend/.env.example
 !delivery-frontend/.env.example

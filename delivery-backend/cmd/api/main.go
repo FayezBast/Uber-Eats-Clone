@@ -25,6 +25,10 @@ func main() {
 		log.Fatalf("auto migrate database: %v", err)
 	}
 
+	if err := database.SeedLocalUsers(db); err != nil {
+		log.Fatalf("seed local users: %v", err)
+	}
+
 	router := gin.Default()
 	_ = router.SetTrustedProxies(nil)
 	router.Use(middleware.CORS())
