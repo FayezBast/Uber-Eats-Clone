@@ -2,6 +2,8 @@
 
 Premium food delivery platform with customer, driver, and admin experiences.
 
+> Status: This project is still under active development.
+
 jo3an is a full-stack Uber Eats style project built to feel like a real product, not just a CRUD demo. The frontend focuses on polished restaurant discovery, fast checkout, and clear order tracking, while the backend handles authentication, delivery lifecycle management, notifications, admin metrics, and simulated live tracking.
 
 This workspace is split into two apps:
