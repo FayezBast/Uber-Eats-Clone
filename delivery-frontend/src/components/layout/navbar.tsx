@@ -10,9 +10,16 @@ import { CartDrawer } from "@/components/cart/cart-drawer";
 import { useAuthStore } from "@/store/auth-store";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { getAdminAppUrl, isExternalUrl } from "@/lib/admin-url";
 import { cn } from "@/lib/utils";
 
-const navLinks = [
+interface NavLinkItem {
+  href: string;
+  label: string;
+  external?: boolean;
+}
+
+const navLinks: NavLinkItem[] = [
   { href: "/", label: "Home" },
   { href: "/restaurants", label: "Discover" },
   { href: "/orders", label: "Orders" }
@@ -24,15 +31,18 @@ export function Navbar() {
   const isAdminRoute = pathname.startsWith("/admin");
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
+  const token = useAuthStore((state) => state.token);
+  const expiresAt = useAuthStore((state) => state.expiresAt);
   const hydrated = useAuthStore((state) => state.hydrated);
   const clearSession = useAuthStore((state) => state.clearSession);
   const [mounted, setMounted] = useState(false);
+  const adminAppUrl = user && token ? getAdminAppUrl({ token, expiresAt, user }) : getAdminAppUrl();
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const roleLinks = useMemo(() => {
+  const roleLinks = useMemo<NavLinkItem[]>(() => {
     if (!mounted || !hydrated || !user) {
       return [];
     }
@@ -42,7 +52,7 @@ export function Navbar() {
     }
 
     if (user.role === "admin") {
-      return [{ href: "/admin", label: "Admin Console" }];
+      return [{ href: adminAppUrl, label: "Admin Console", external: isExternalUrl(adminAppUrl) }];
     }
 
     if (user.role === "owner") {
@@ -50,7 +60,7 @@ export function Navbar() {
     }
 
     return [];
-  }, [hydrated, mounted, user]);
+  }, [adminAppUrl, hydrated, mounted, user]);
 
   if (isAuthRoute || isAdminRoute) {
     return null;
@@ -73,20 +83,23 @@ export function Navbar() {
               </span>
             </Link>
             <nav className="hidden items-center gap-1 rounded-full bg-white/72 p-1 md:flex">
-              {[...navLinks, ...roleLinks].map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={cn(
-                    "rounded-full px-4 py-2 text-sm font-medium transition hover:bg-white/70",
-                    (link.href === "/" ? pathname === link.href : pathname.startsWith(link.href))
-                      ? "bg-foreground text-white shadow-sm"
-                      : "text-muted-foreground"
-                  )}
-                >
-                  {link.label}
-                </Link>
-              ))}
+              {[...navLinks, ...roleLinks].map((link) => {
+                const active = !link.external && (link.href === "/" ? pathname === link.href : pathname.startsWith(link.href));
+                const className = cn(
+                  "rounded-full px-4 py-2 text-sm font-medium transition hover:bg-white/70",
+                  active ? "bg-foreground text-white shadow-sm" : "text-muted-foreground"
+                );
+
+                return link.external ? (
+                  <a key={link.href} href={link.href} className={className}>
+                    {link.label}
+                  </a>
+                ) : (
+                  <Link key={link.href} href={link.href} className={className}>
+                    {link.label}
+                  </Link>
+                );
+              })}
             </nav>
           </div>
           <div className="flex items-center gap-3">

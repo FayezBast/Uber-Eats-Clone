@@ -36,6 +36,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { getAdminAppUrl } from "@/lib/admin-url";
 import { formatCurrency, formatOrderTime, formatStatusLabel } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { restaurants } from "@/mocks/data";
@@ -117,12 +118,12 @@ const performanceOffsets = ["+14%", "+11%", "+8%"];
 const selectFieldClassName =
   "h-11 w-full rounded-full border border-border/80 bg-white/82 px-4 text-sm text-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
-function resolveWorkspaceHref(role: AppRole) {
+function resolveWorkspaceHref(role: AppRole, adminHref: string) {
   switch (role) {
     case "driver":
       return "/driver";
     case "admin":
-      return "/admin";
+      return adminHref;
     case "owner":
       return "/owner";
     default:
@@ -289,6 +290,8 @@ function PhotoSurface({
 
 export default function OwnerPage() {
   const user = useAuthStore((state) => state.user);
+  const token = useAuthStore((state) => state.token);
+  const expiresAt = useAuthStore((state) => state.expiresAt);
   const hydrated = useAuthStore((state) => state.hydrated);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -680,7 +683,7 @@ export default function OwnerPage() {
           description="This studio is reserved for owner accounts. Customer, driver, and admin roles keep their own workspaces."
           action={
             <Button asChild variant="outline">
-              <Link href={resolveWorkspaceHref(user.role)}>Open your workspace</Link>
+              <Link href={resolveWorkspaceHref(user.role, token ? getAdminAppUrl({ token, expiresAt, user }) : getAdminAppUrl())}>Open your workspace</Link>
             </Button>
           }
         />

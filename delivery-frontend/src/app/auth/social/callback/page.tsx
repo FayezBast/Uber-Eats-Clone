@@ -4,19 +4,20 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { getAdminAppUrl, isExternalUrl } from "@/lib/admin-url";
 import { useAuthStore } from "@/store/auth-store";
-import { type AppRole } from "@/types";
+import { type AppRole, type AuthSession } from "@/types";
 
 type CallbackState =
   | { status: "loading" }
   | { status: "error"; message: string };
 
-function resolveRedirectPath(userRole: AppRole) {
-  switch (userRole) {
+function resolveRedirectPath(session: AuthSession) {
+  switch (session.user.role) {
     case "driver":
       return "/driver";
     case "admin":
-      return "/admin";
+      return getAdminAppUrl(session);
     case "owner":
       return "/owner";
     default:
@@ -53,7 +54,7 @@ export default function SocialAuthCallbackPage() {
       return;
     }
 
-    setSession({
+    const session: AuthSession = {
       token,
       expiresAt,
       user: {
@@ -62,10 +63,20 @@ export default function SocialAuthCallbackPage() {
         email,
         role
       }
-    });
+    };
+
+    setSession(session);
+
+    const redirectPath = resolveRedirectPath(session);
 
     window.history.replaceState(null, "", "/auth/social/callback");
-    router.replace(resolveRedirectPath(role));
+
+    if (isExternalUrl(redirectPath)) {
+      window.location.replace(redirectPath);
+      return;
+    }
+
+    router.replace(redirectPath);
     router.refresh();
   }, [router, setSession]);
 

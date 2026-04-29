@@ -1,0 +1,121 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --background: 38 47% 96%;
+  --foreground: 214 28% 16%;
+  --card: 0 0% 100%;
+  --card-foreground: 214 28% 16%;
+  --muted: 35 24% 89%;
+  --muted-foreground: 215 15% 43%;
+  --primary: 23 88% 55%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 37 38% 92%;
+  --secondary-foreground: 214 28% 16%;
+  --accent: 145 24% 58%;
+  --accent-foreground: 214 28% 16%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+  --success: 142 38% 38%;
+  --success-foreground: 0 0% 100%;
+  --warning: 38 92% 50%;
+  --warning-foreground: 214 28% 16%;
+  --info: 145 24% 58%;
+  --info-foreground: 214 28% 16%;
+  --border: 30 20% 84%;
+  --input: 30 20% 84%;
+  --ring: 23 88% 55%;
+  --sidebar: 37 38% 92%;
+  --sidebar-foreground: 214 28% 16%;
+  --sidebar-muted: 35 24% 89%;
+  --sidebar-border: 30 20% 84%;
+  --sidebar-accent: 24 89% 94%;
+}
+
+.dark {
+  color-scheme: dark;
+  --background: 30 28% 10%;
+  --foreground: 42 36% 92%;
+  --card: 28 26% 14%;
+  --card-foreground: 42 36% 92%;
+  --muted: 31 21% 20%;
+  --muted-foreground: 36 16% 72%;
+  --primary: 23 88% 62%;
+  --primary-foreground: 30 28% 10%;
+  --secondary: 31 21% 20%;
+  --secondary-foreground: 42 36% 92%;
+  --accent: 145 24% 64%;
+  --accent-foreground: 30 28% 10%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 42 36% 92%;
+  --success: 142 38% 48%;
+  --success-foreground: 30 28% 10%;
+  --warning: 43 96% 56%;
+  --warning-foreground: 30 28% 10%;
+  --info: 145 24% 64%;
+  --info-foreground: 30 28% 10%;
+  --border: 31 18% 26%;
+  --input: 31 18% 26%;
+  --ring: 23 88% 62%;
+  --sidebar: 28 26% 14%;
+  --sidebar-foreground: 42 36% 92%;
+  --sidebar-muted: 31 21% 20%;
+  --sidebar-border: 31 18% 26%;
+  --sidebar-accent: 30 24% 18%;
+}
+
+* {
+  @apply border-border;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  @apply bg-background font-sans text-foreground antialiased;
+  background:
+    radial-gradient(circle at top left, rgba(255, 184, 112, 0.28), transparent 28%),
+    radial-gradient(circle at 84% 8%, rgba(114, 153, 120, 0.2), transparent 18%),
+    radial-gradient(circle at 50% 18%, rgba(255, 255, 255, 0.72), transparent 38%),
+    linear-gradient(180deg, rgba(255, 252, 247, 0.96), rgba(246, 238, 228, 0.94));
+}
+
+a {
+  @apply text-inherit no-underline;
+}
+
+button,
+input,
+select,
+textarea {
+  @apply outline-none ring-offset-background;
+}
+
+::selection {
+  background: hsl(45 100% 78%);
+  color: hsl(var(--foreground));
+}
+
+.scrollbar-subtle {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--border)) transparent;
+}
+
+.scrollbar-subtle::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.scrollbar-subtle::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 999px;
+}
+
+.scrollbar-subtle::-webkit-scrollbar-track {
+  background: transparent;
+}

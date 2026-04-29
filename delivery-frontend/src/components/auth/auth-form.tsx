@@ -8,7 +8,8 @@ import { useRouter } from "next/navigation";
 import { SocialAuthButton } from "@/components/auth/social-auth-button";
 import { useAuthStore } from "@/store/auth-store";
 import { apiClient } from "@/services/api/client";
-import { type AppRole } from "@/types";
+import { getAdminAppUrl, isExternalUrl } from "@/lib/admin-url";
+import { type AuthSession } from "@/types";
 
 interface AuthFormProps {
   mode: "sign-in" | "sign-up";
@@ -62,17 +63,29 @@ export function AuthForm({ mode }: AuthFormProps) {
 
   const hasErrors = Object.values(errors).some(Boolean);
 
-  function resolveRedirectPath(userRole: AppRole) {
-    switch (userRole) {
+  function resolveRedirectPath(session: AuthSession) {
+    switch (session.user.role) {
       case "driver":
         return "/driver";
       case "admin":
-        return "/admin";
+        return getAdminAppUrl(session);
       case "owner":
         return "/owner";
       default:
         return "/orders";
     }
+  }
+
+  function navigateToRoleWorkspace(session: AuthSession) {
+    const redirectPath = resolveRedirectPath(session);
+
+    if (isExternalUrl(redirectPath)) {
+      window.location.assign(redirectPath);
+      return;
+    }
+
+    router.push(redirectPath);
+    router.refresh();
   }
 
   function clearVerificationState() {
@@ -138,8 +151,7 @@ export function AuthForm({ mode }: AuthFormProps) {
     setSession(session);
     setMessageTone("success");
     setServerMessage(`Account created for ${session.user.fullName}. Redirecting now.`);
-    router.push(resolveRedirectPath(session.user.role));
-    router.refresh();
+    navigateToRoleWorkspace(session);
   }
 
   async function handleResendCode() {
@@ -173,8 +185,7 @@ export function AuthForm({ mode }: AuthFormProps) {
         setSession(session);
         setMessageTone("success");
         setServerMessage(`Signed in as ${session.user.fullName}. Redirecting now.`);
-        router.push(resolveRedirectPath(session.user.role));
-        router.refresh();
+        navigateToRoleWorkspace(session);
       } else if (verificationStep) {
         await completeRegistration();
       } else {

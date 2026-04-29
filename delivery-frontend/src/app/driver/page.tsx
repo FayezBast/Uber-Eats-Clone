@@ -23,6 +23,7 @@ import { SkeletonCard } from "@/components/states/skeleton-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { getAdminAppUrl } from "@/lib/admin-url";
 import { cn } from "@/lib/utils";
 import {
   formatCurrency,
@@ -455,6 +456,8 @@ function RouteHistory({ history }: { history: DeliveryStatusHistoryItem[] }) {
 
 export default function DriverPage() {
   const user = useAuthStore((state) => state.user);
+  const token = useAuthStore((state) => state.token);
+  const expiresAt = useAuthStore((state) => state.expiresAt);
   const hydrated = useAuthStore((state) => state.hydrated);
 
   const dataLoadedRef = useRef(false);
@@ -724,7 +727,7 @@ export default function DriverPage() {
             <Button asChild variant="outline">
               <Link
                 href={
-                  user.role === "admin" ? "/admin" : user.role === "owner" ? "/owner" : "/orders"
+                  user.role === "admin" ? (token ? getAdminAppUrl({ token, expiresAt, user }) : getAdminAppUrl()) : user.role === "owner" ? "/owner" : "/orders"
                 }
               >
                 Open your workspace

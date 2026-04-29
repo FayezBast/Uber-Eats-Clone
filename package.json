@@ -8,6 +8,10 @@
     "frontend:dev": "npm --prefix delivery-frontend run dev",
     "frontend:build": "npm --prefix delivery-frontend run build",
     "frontend:lint": "npm --prefix delivery-frontend run lint",
+    "admin:install": "npm --prefix delivery-admin install",
+    "admin:dev": "npm --prefix delivery-admin run dev",
+    "admin:build": "npm --prefix delivery-admin run build",
+    "admin:preview": "npm --prefix delivery-admin run preview",
     "backend:dev": "go -C delivery-backend run ./cmd/api",
     "backend:test": "go test ./delivery-backend/..."
   }

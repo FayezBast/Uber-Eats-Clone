@@ -12,6 +12,10 @@ cleanup() {
   if [[ -n "${FRONTEND_PID:-}" ]] && kill -0 "$FRONTEND_PID" 2>/dev/null; then
     kill "$FRONTEND_PID" 2>/dev/null || true
   fi
+
+  if [[ -n "${ADMIN_PID:-}" ]] && kill -0 "$ADMIN_PID" 2>/dev/null; then
+    kill "$ADMIN_PID" 2>/dev/null || true
+  fi
 }
 
 trap cleanup EXIT INT TERM
@@ -24,6 +28,9 @@ BACKEND_PID=$!
 npm --prefix delivery-frontend run dev &
 FRONTEND_PID=$!
 
+npm --prefix delivery-admin run dev &
+ADMIN_PID=$!
+
 while true; do
   if ! kill -0 "$BACKEND_PID" 2>/dev/null; then
     wait "$BACKEND_PID"
@@ -32,6 +39,11 @@ while true; do
 
   if ! kill -0 "$FRONTEND_PID" 2>/dev/null; then
     wait "$FRONTEND_PID"
+    exit $?
+  fi
+
+  if ! kill -0 "$ADMIN_PID" 2>/dev/null; then
+    wait "$ADMIN_PID"
     exit $?
   fi
 

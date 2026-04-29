@@ -50,6 +50,7 @@ import {
   formatOrderTime,
   formatStatusLabel
 } from "@/lib/format";
+import { getAdminAppUrl, isExternalUrl } from "@/lib/admin-url";
 import { cn } from "@/lib/utils";
 import { apiClient } from "@/services/api/client";
 import { useAuthStore } from "@/store/auth-store";
@@ -120,18 +121,19 @@ const deliveryStatusFilters: Array<{ label: string; value: "all" | DeliveryStatu
 ];
 
 const adminSelectClassName =
-  "h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none transition focus:border-sky-500/45 focus:ring-2 focus:ring-sky-500/10";
+  "h-11 w-full rounded-xl border border-slate-300/75 bg-slate-950/[0.02] px-4 text-sm font-medium text-slate-800 outline-none transition duration-150 focus:border-slate-950/35 focus:bg-white focus:ring-2 focus:ring-slate-950/10";
 const adminPanelClassName =
-  "rounded-[30px] border border-slate-200/80 bg-white/92 text-slate-900 shadow-[0_28px_70px_-46px_rgba(15,23,42,0.3)]";
-const adminSubtlePanelClassName = "rounded-[24px] border border-slate-200/70 bg-slate-50/80";
+  "rounded-[22px] border border-slate-200/85 bg-[linear-gradient(180deg,rgba(255,255,255,0.97),rgba(248,250,252,0.94))] text-slate-900 shadow-[0_18px_48px_-34px_rgba(15,23,42,0.24)]";
+const adminSubtlePanelClassName =
+  "rounded-[18px] border border-slate-200/80 bg-slate-950/[0.025]";
 const adminChipClassName =
-  "rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium tracking-[0.08em] text-slate-500";
+  "inline-flex items-center rounded-full border border-slate-300/70 bg-slate-50 px-3 py-1.5 text-[11px] font-medium tracking-[0.12em] text-slate-600";
 const adminOutlineButtonClassName =
-  "border-slate-200 bg-white text-slate-800 hover:translate-y-0 hover:bg-slate-50 hover:text-slate-900 hover:shadow-none";
+  "rounded-xl border-slate-300/75 bg-white text-slate-900 shadow-none hover:translate-y-0 hover:border-slate-400 hover:bg-slate-50 hover:text-slate-950 hover:shadow-none";
 const adminPrimaryButtonClassName =
-  "bg-slate-900 text-white shadow-none hover:translate-y-0 hover:bg-slate-800 hover:shadow-none";
+  "rounded-xl bg-slate-950 text-white shadow-none hover:translate-y-0 hover:bg-slate-800 hover:shadow-none";
 const adminSecondaryButtonClassName =
-  "bg-sky-600 text-white shadow-none hover:translate-y-0 hover:bg-sky-500 hover:shadow-none";
+  "rounded-xl border border-white/20 bg-white text-slate-950 shadow-none hover:translate-y-0 hover:bg-slate-100 hover:shadow-none";
 
 function average(values: number[]) {
   if (!values.length) {
@@ -258,21 +260,21 @@ function toneClasses(tone: WatchTone) {
   switch (tone) {
     case "critical":
       return {
-        badge: "border-rose-200 bg-rose-50 text-rose-700",
-        panel: "border-rose-200/80 bg-rose-50/70",
-        icon: "bg-rose-100 text-rose-700"
+        badge: "border-rose-200/80 bg-rose-50 text-rose-700",
+        panel: "border-rose-200/80 bg-[linear-gradient(180deg,rgba(255,241,242,0.92),rgba(255,255,255,0.98))]",
+        icon: "border border-rose-200/80 bg-rose-100/80 text-rose-700"
       };
     case "attention":
       return {
-        badge: "border-amber-200 bg-amber-50 text-amber-700",
-        panel: "border-amber-200/80 bg-amber-50/75",
-        icon: "bg-amber-100 text-amber-700"
+        badge: "border-amber-200/80 bg-amber-50 text-amber-700",
+        panel: "border-amber-200/80 bg-[linear-gradient(180deg,rgba(255,251,235,0.94),rgba(255,255,255,0.98))]",
+        icon: "border border-amber-200/80 bg-amber-100/80 text-amber-700"
       };
     default:
       return {
-        badge: "border-slate-200 bg-white text-slate-600",
-        panel: "border-slate-200/80 bg-slate-50/85",
-        icon: "bg-slate-100 text-slate-600"
+        badge: "border-slate-300/70 bg-slate-50 text-slate-700",
+        panel: "border-slate-200/80 bg-[linear-gradient(180deg,rgba(248,250,252,0.9),rgba(255,255,255,0.98))]",
+        icon: "border border-slate-200/80 bg-white text-slate-600"
       };
   }
 }
@@ -282,34 +284,34 @@ function loadBarClasses(tone: LoadTone) {
     case "amber":
       return "bg-amber-500";
     case "sky":
-      return "bg-sky-500";
+      return "bg-sky-600";
     case "slate":
-      return "bg-slate-400";
+      return "bg-slate-700";
     default:
-      return "bg-emerald-500";
+      return "bg-emerald-600";
   }
 }
 
 function statusPillClasses(status: DeliveryRecord["status"]) {
   switch (status) {
     case "delivered":
-      return "border-emerald-200 bg-emerald-50 text-emerald-700";
+      return "border-emerald-200/80 bg-emerald-50 text-emerald-700";
     case "accepted":
     case "picked_up":
-      return "border-sky-200 bg-sky-50 text-sky-700";
+      return "border-sky-200/80 bg-sky-50 text-sky-700";
     default:
-      return "border-amber-200 bg-amber-50 text-amber-700";
+      return "border-amber-200/80 bg-amber-50 text-amber-700";
   }
 }
 
 function notificationPillClasses(tone: WatchTone) {
   switch (tone) {
     case "critical":
-      return "border-rose-200 bg-rose-50 text-rose-700";
+      return "border-rose-200/80 bg-rose-50 text-rose-700";
     case "attention":
-      return "border-amber-200 bg-amber-50 text-amber-700";
+      return "border-amber-200/80 bg-amber-50 text-amber-700";
     default:
-      return "border-emerald-200 bg-emerald-50 text-emerald-700";
+      return "border-emerald-200/80 bg-emerald-50 text-emerald-700";
   }
 }
 
@@ -337,11 +339,11 @@ function trendLabel(delta: number | null) {
 function trendChipClasses(tone: TrendTone) {
   switch (tone) {
     case "positive":
-      return "border-emerald-200 bg-emerald-50 text-emerald-700";
+      return "border-emerald-200/80 bg-emerald-50 text-emerald-700";
     case "warning":
-      return "border-amber-200 bg-amber-50 text-amber-700";
+      return "border-amber-200/80 bg-amber-50 text-amber-700";
     default:
-      return "border-slate-200 bg-slate-50 text-slate-600";
+      return "border-slate-300/70 bg-slate-50 text-slate-700";
   }
 }
 
@@ -558,12 +560,13 @@ function DashboardShell({
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-xl font-semibold tracking-tight text-slate-950 sm:text-[1.45rem]">{title}</h2>
-          <p className="mt-1.5 max-w-2xl text-sm leading-6 text-slate-500">{description}</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Operations module</p>
+          <h2 className="mt-3 text-xl font-semibold tracking-tight text-slate-950 sm:text-[1.4rem]">{title}</h2>
+          <p className="mt-1.5 max-w-2xl text-sm leading-6 text-slate-600">{description}</p>
         </div>
         {action}
       </div>
-      <div className="mt-6">{children}</div>
+      <div className="mt-5">{children}</div>
     </section>
   );
 }
@@ -585,16 +588,16 @@ function SidebarNavItem({
     <a
       href={href}
       className={cn(
-        "flex items-center gap-3 rounded-2xl px-3 py-3 text-sm transition-colors",
+        "flex items-center gap-3 rounded-xl border px-3 py-3 text-sm font-medium transition-colors",
         active
-          ? "bg-white/12 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
-          : "text-slate-300 hover:bg-white/8 hover:text-white"
+          ? "border-white/12 bg-white/9 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
+          : "border-transparent text-slate-300 hover:border-white/8 hover:bg-white/6 hover:text-white"
       )}
     >
       <Icon className="h-4 w-4" />
       <span className="flex-1">{label}</span>
       {value ? (
-        <span className="rounded-full border border-white/10 bg-white/8 px-2.5 py-1 text-[11px] tracking-[0.14em] text-slate-300">
+        <span className="rounded-full border border-white/10 bg-slate-950/40 px-2.5 py-1 text-[11px] tracking-[0.14em] text-slate-300">
           {value}
         </span>
       ) : null}
@@ -620,17 +623,18 @@ function StatCard({
   return (
     <div className={`${adminPanelClassName} p-5`}>
       <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-slate-400">{label}</p>
-          <p className="mt-4 text-3xl font-semibold tracking-tight text-slate-950 sm:text-[2.2rem]">{value}</p>
+        <div className="min-w-0">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">{label}</p>
+          <p className="mt-4 text-3xl font-semibold tracking-tight text-slate-950 sm:text-[2.15rem]">{value}</p>
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-slate-900 p-3 text-white">
+        <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200/90 bg-slate-950 text-white">
           <Icon className="h-5 w-5" />
         </div>
       </div>
+      <div className="mt-5 h-px bg-slate-200/80" />
       <div className="mt-4 flex flex-wrap items-center gap-2">
         <div className={cn("rounded-full border px-3 py-1 text-xs", trendChipClasses(chipTone))}>{chip}</div>
-        <p className="text-sm text-slate-500">{detail}</p>
+        <p className="text-sm text-slate-600">{detail}</p>
       </div>
     </div>
   );
@@ -673,12 +677,12 @@ function RevenueTrendChart({ points }: { points: RevenuePoint[] }) {
   ].join(" ");
 
   return (
-    <div className="rounded-[26px] border border-slate-200/80 bg-slate-50/85 p-3 sm:p-4">
+    <div className="rounded-[18px] border border-slate-200/80 bg-[linear-gradient(180deg,rgba(248,250,252,0.94),rgba(255,255,255,0.98))] p-4">
       <svg viewBox={`0 0 ${width} ${height}`} className="h-[280px] w-full" role="img" aria-label="Revenue trend">
         <defs>
           <linearGradient id="admin-revenue-fill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="rgba(14,165,233,0.28)" />
-            <stop offset="100%" stopColor="rgba(14,165,233,0.02)" />
+            <stop offset="0%" stopColor="rgba(15,23,42,0.16)" />
+            <stop offset="100%" stopColor="rgba(15,23,42,0.02)" />
           </linearGradient>
         </defs>
 
@@ -691,7 +695,7 @@ function RevenueTrendChart({ points }: { points: RevenuePoint[] }) {
               x2={width - padding.right}
               y1={y}
               y2={y}
-              stroke="rgba(148,163,184,0.28)"
+              stroke="rgba(148,163,184,0.24)"
               strokeDasharray="4 6"
             />
           );
@@ -701,7 +705,7 @@ function RevenueTrendChart({ points }: { points: RevenuePoint[] }) {
         <path
           d={linePath}
           fill="none"
-          stroke="#0284c7"
+          stroke="#0f172a"
           strokeLinecap="round"
           strokeLinejoin="round"
           strokeWidth="3"
@@ -709,12 +713,12 @@ function RevenueTrendChart({ points }: { points: RevenuePoint[] }) {
 
         {positions.map((point, index) => (
           <g key={`${point.label}-${index}`}>
-            <circle cx={point.x} cy={point.y} r="4" fill="#0284c7" />
-            <circle cx={point.x} cy={point.y} r="8" fill="rgba(2,132,199,0.16)" />
+            <circle cx={point.x} cy={point.y} r="4" fill="#0f172a" />
+            <circle cx={point.x} cy={point.y} r="8" fill="rgba(15,23,42,0.1)" />
             <text
               x={point.x}
               y={height - 10}
-              fill="rgba(100,116,139,0.88)"
+              fill="rgba(71,85,105,0.9)"
               fontSize="12"
               textAnchor="middle"
             >
@@ -735,12 +739,12 @@ function DistributionBars({ items }: { items: LoadBarItem[] }) {
       {items.map((item) => (
         <div key={item.label} className="space-y-2">
           <div className="flex items-center justify-between gap-3 text-sm">
-            <span className="text-slate-500">{item.label}</span>
-            <span className="font-medium text-slate-700">{item.value}</span>
+            <span className="text-slate-600">{item.label}</span>
+            <span className="font-medium text-slate-800">{item.value}</span>
           </div>
-          <div className="h-10 rounded-2xl bg-slate-100 p-1">
+          <div className="h-3 rounded-full bg-slate-200/80">
             <div
-              className={cn("h-full rounded-[14px]", loadBarClasses(item.tone))}
+              className={cn("h-full rounded-full", loadBarClasses(item.tone))}
               style={{ width: `${Math.max((item.value / maxValue) * 100, item.value > 0 ? 12 : 0)}%` }}
             />
           </div>
@@ -754,7 +758,7 @@ function StatusPill({ status }: { status: DeliveryRecord["status"] }) {
   return (
     <div
       className={cn(
-        "inline-flex rounded-full border px-3 py-1 text-xs font-medium tracking-[0.08em]",
+        "inline-flex items-center rounded-full border px-3 py-1.5 text-[11px] font-medium tracking-[0.12em]",
         statusPillClasses(status)
       )}
     >
@@ -767,10 +771,10 @@ function DriverRouteMap({ tracking }: { tracking: TrackingSnapshot }) {
   const plotPoints = buildMapPlotPoints(tracking);
 
   return (
-    <div className="relative h-[260px] overflow-hidden rounded-[24px] border border-slate-200 bg-slate-950">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(14,165,233,0.18),transparent_34%),radial-gradient(circle_at_bottom_left,rgba(34,197,94,0.12),transparent_24%)]" />
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:56px_56px]" />
-      <div className="absolute left-4 top-4 rounded-full border border-white/10 bg-white/8 px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-slate-300">
+    <div className="relative h-[260px] overflow-hidden rounded-[20px] border border-slate-800/90 bg-slate-950">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(56,189,248,0.14),transparent_32%),radial-gradient(circle_at_bottom_left,rgba(148,163,184,0.12),transparent_28%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.045)_1px,transparent_1px)] bg-[size:56px_56px]" />
+      <div className="absolute left-4 top-4 rounded-full border border-white/10 bg-slate-900/70 px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-slate-300">
         GPS route
       </div>
       {plotPoints.map((point) => (
@@ -787,13 +791,13 @@ function DriverRouteMap({ tracking }: { tracking: TrackingSnapshot }) {
             className={cn(
               "rounded-full",
               point.current
-                ? "h-4 w-4 border-4 border-slate-950 bg-sky-400 shadow-[0_0_0_12px_rgba(14,165,233,0.18)]"
+                ? "h-4 w-4 border-4 border-slate-950 bg-sky-400 shadow-[0_0_0_12px_rgba(56,189,248,0.16)]"
                 : "h-2.5 w-2.5 bg-white/45"
             )}
           />
         </div>
       ))}
-      <div className="absolute inset-x-4 bottom-4 rounded-[18px] border border-white/10 bg-slate-950/80 p-4 backdrop-blur">
+      <div className="absolute inset-x-4 bottom-4 rounded-[16px] border border-white/10 bg-slate-950/80 p-4 backdrop-blur">
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
             <p className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Latitude</p>
@@ -816,24 +820,28 @@ function AdminLoadingState() {
         {Array.from({ length: 4 }).map((_, index) => (
           <div
             key={`admin-stat-skeleton-${index}`}
-            className="h-[170px] animate-pulse rounded-[28px] bg-slate-200/80"
+            className="h-[170px] animate-pulse rounded-[22px] bg-slate-200/80"
           />
         ))}
       </section>
       <section className="grid gap-4 2xl:grid-cols-[minmax(0,2fr)_minmax(340px,1fr)]">
-        <div className="h-[420px] animate-pulse rounded-[30px] bg-slate-200/80" />
-        <div className="h-[420px] animate-pulse rounded-[30px] bg-slate-200/80" />
+        <div className="h-[420px] animate-pulse rounded-[22px] bg-slate-200/80" />
+        <div className="h-[420px] animate-pulse rounded-[22px] bg-slate-200/80" />
       </section>
       <section className="grid gap-4 2xl:grid-cols-[minmax(0,1.6fr)_minmax(360px,1fr)]">
-        <div className="h-[420px] animate-pulse rounded-[30px] bg-slate-200/80" />
-        <div className="h-[420px] animate-pulse rounded-[30px] bg-slate-200/80" />
+        <div className="h-[420px] animate-pulse rounded-[22px] bg-slate-200/80" />
+        <div className="h-[420px] animate-pulse rounded-[22px] bg-slate-200/80" />
       </section>
     </>
   );
 }
 
 export default function AdminPage() {
+  const adminAppUrl = getAdminAppUrl();
+  const useStandaloneAdmin = isExternalUrl(adminAppUrl);
   const user = useAuthStore((state) => state.user);
+  const token = useAuthStore((state) => state.token);
+  const expiresAt = useAuthStore((state) => state.expiresAt);
   const hydrated = useAuthStore((state) => state.hydrated);
   const userId = user?.id;
   const userRole = user?.role;
@@ -865,7 +873,14 @@ export default function AdminPage() {
   const [actionMessage, setActionMessage] = useState("");
 
   useEffect(() => {
-    if (!hydrated) {
+    if (useStandaloneAdmin && hydrated) {
+      const targetUrl = user && token ? getAdminAppUrl({ token, expiresAt, user }) : adminAppUrl;
+      window.location.replace(targetUrl);
+    }
+  }, [adminAppUrl, expiresAt, hydrated, token, useStandaloneAdmin, user]);
+
+  useEffect(() => {
+    if (useStandaloneAdmin || !hydrated) {
       return;
     }
 
@@ -920,7 +935,7 @@ export default function AdminPage() {
     return () => {
       mounted = false;
     };
-  }, [hydrated, refreshTick, userId, userRole]);
+  }, [hydrated, refreshTick, useStandaloneAdmin, userId, userRole]);
 
   const sortedDeliveries = useMemo(
     () =>
@@ -1397,12 +1412,16 @@ export default function AdminPage() {
 
   const userInitials = useMemo(() => getInitials(user?.fullName ?? "Admin"), [user?.fullName]);
 
+  if (useStandaloneAdmin) {
+    return <AdminLoadingState />;
+  }
+
   if (!hydrated) {
     return (
-      <div className="min-h-screen bg-[linear-gradient(180deg,#f6f8fb_0%,#edf2f7_52%,#f8fafc_100%)] p-4 lg:p-6">
+      <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(15,23,42,0.12),transparent_28%),radial-gradient(circle_at_top_right,rgba(56,189,248,0.08),transparent_18%),linear-gradient(180deg,#e6ebf2_0%,#dbe3eb_46%,#eef2f6_100%)] p-4 lg:p-6">
         <div className="mx-auto grid max-w-[1800px] gap-5 xl:grid-cols-[280px_minmax(0,1fr)]">
-          <div className="h-[460px] animate-pulse rounded-[34px] bg-slate-900/90" />
-          <div className="h-[780px] animate-pulse rounded-[34px] bg-white/75" />
+          <div className="h-[460px] animate-pulse rounded-[30px] bg-slate-950/90" />
+          <div className="h-[780px] animate-pulse rounded-[30px] bg-white/75" />
         </div>
       </div>
     );
@@ -1448,27 +1467,27 @@ export default function AdminPage() {
 
   return (
     <Dialog open={locatorOpen} onOpenChange={setLocatorOpen}>
-      <div className="min-h-screen bg-[linear-gradient(180deg,#f6f8fb_0%,#edf2f7_52%,#f8fafc_100%)] p-4 lg:p-6">
+      <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(15,23,42,0.12),transparent_28%),radial-gradient(circle_at_top_right,rgba(56,189,248,0.08),transparent_18%),linear-gradient(180deg,#e6ebf2_0%,#dbe3eb_46%,#eef2f6_100%)] p-4 lg:p-6">
         <div className="mx-auto grid max-w-[1800px] gap-5 xl:grid-cols-[280px_minmax(0,1fr)]">
-          <aside className="rounded-[34px] border border-slate-800/80 bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.2),transparent_30%),linear-gradient(180deg,#0f172a_0%,#111827_100%)] p-5 text-white shadow-[0_36px_90px_-50px_rgba(15,23,42,0.7)] sm:p-6 xl:sticky xl:top-6 xl:self-start">
+          <aside className="rounded-[30px] border border-slate-800/90 bg-[radial-gradient(circle_at_top_right,rgba(56,189,248,0.12),transparent_30%),linear-gradient(180deg,#0a1220_0%,#0f172a_52%,#111827_100%)] p-5 text-white shadow-[0_28px_80px_-44px_rgba(15,23,42,0.78)] sm:p-6 xl:sticky xl:top-6 xl:self-start">
             <div className="flex h-full flex-col">
               <div className="flex items-center gap-3">
-                <div className="rounded-2xl bg-sky-400/16 p-3 text-sky-200 ring-1 ring-white/10">
+                <div className="rounded-[18px] border border-white/10 bg-white/6 p-3 text-sky-200">
                   <UtensilsCrossed className="h-5 w-5" />
                 </div>
                 <div>
                   <p className="text-lg font-semibold tracking-tight text-white">Admin Console</p>
-                  <p className="text-xs uppercase tracking-[0.22em] text-slate-400">Operations control</p>
+                  <p className="text-xs uppercase tracking-[0.22em] text-slate-500">Network administration</p>
                 </div>
               </div>
 
               <p className="mt-6 text-sm leading-6 text-slate-300">
-                Monitor dispatch pressure, delivery flow, courier activity, and audit history from one workspace.
+                Dispatch oversight, fleet visibility, and audit controls consolidated into a single operations desk.
               </p>
 
               <div className="mt-8">
                 <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-slate-500">
-                  Navigation
+                  Modules
                 </p>
                 <nav className="mt-3 space-y-1.5">
                   <SidebarNavItem href="#overview" icon={ChartColumn} label="Overview" value={String(totalDeliveries || 0)} active />
@@ -1479,7 +1498,7 @@ export default function AdminPage() {
                 </nav>
               </div>
 
-              <div className="mt-6 rounded-[28px] border border-white/10 bg-white/8 p-4">
+              <div className="mt-6 rounded-[22px] border border-white/10 bg-white/6 p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Network posture</p>
@@ -1487,24 +1506,24 @@ export default function AdminPage() {
                       {operatingPosture.label}
                     </p>
                   </div>
-                  <div className={cn("rounded-2xl p-2.5", postureClasses.icon)}>
+                  <div className={cn("rounded-xl p-2.5", postureClasses.icon)}>
                     <ShieldCheck className="h-4.5 w-4.5" />
                   </div>
                 </div>
                 <p className="mt-3 text-sm leading-6 text-slate-300">{operatingPosture.summary}</p>
                 <div className="mt-4 grid grid-cols-2 gap-2">
-                  <div className="rounded-2xl border border-white/10 bg-slate-950/35 px-3 py-3">
+                  <div className="rounded-[16px] border border-white/10 bg-slate-950/35 px-3 py-3">
                     <p className="text-[11px] uppercase tracking-[0.16em] text-slate-500">Critical</p>
                     <p className="mt-2 text-lg font-semibold text-white">{criticalSignals}</p>
                   </div>
-                  <div className="rounded-2xl border border-white/10 bg-slate-950/35 px-3 py-3">
+                  <div className="rounded-[16px] border border-white/10 bg-slate-950/35 px-3 py-3">
                     <p className="text-[11px] uppercase tracking-[0.16em] text-slate-500">Unread</p>
                     <p className="mt-2 text-lg font-semibold text-white">{unreadNotifications.length}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="mt-4 rounded-[28px] border border-white/10 bg-white/8 p-4">
+              <div className="mt-4 rounded-[22px] border border-white/10 bg-white/6 p-4">
                 <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Signed in</p>
                 <p className="mt-3 text-lg font-semibold text-white">{user.fullName ?? "Admin operator"}</p>
                 <p className="mt-1 text-sm text-slate-300">Administrator account</p>
@@ -1512,25 +1531,25 @@ export default function AdminPage() {
 
               <a
                 href="#activity"
-                className="mt-auto flex items-center gap-3 rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-sm text-slate-300 transition-colors hover:bg-white/12 hover:text-white"
+                className="mt-auto flex items-center gap-3 rounded-xl border border-white/10 bg-white/6 px-4 py-3 text-sm text-slate-300 transition-colors hover:bg-white/10 hover:text-white"
               >
                 <Settings className="h-4 w-4" />
-                Review audit trail
+                Open audit desk
               </a>
             </div>
           </aside>
 
-          <main className="overflow-hidden rounded-[34px] border border-white/80 bg-white/72 shadow-[0_44px_120px_-64px_rgba(15,23,42,0.42)] backdrop-blur-xl">
-            <header className="border-b border-slate-200/80 bg-white/82 px-4 py-4 backdrop-blur sm:px-6 sm:py-5">
+          <main className="overflow-hidden rounded-[30px] border border-white/70 bg-[linear-gradient(180deg,rgba(248,250,252,0.88),rgba(255,255,255,0.96))] shadow-[0_34px_110px_-58px_rgba(15,23,42,0.42)] backdrop-blur-xl">
+            <header className="sticky top-0 z-20 border-b border-slate-200/85 bg-white/84 px-4 py-4 backdrop-blur sm:px-6 sm:py-5">
               <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                 <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-[0_14px_30px_-18px_rgba(15,23,42,0.7)]">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-slate-200/90 bg-slate-950 text-white shadow-[0_14px_30px_-20px_rgba(15,23,42,0.55)]">
                     <ChartColumn className="h-5 w-5" />
                   </div>
                   <div>
-                    <p className="text-[11px] uppercase tracking-[0.24em] text-slate-400">Admin workspace</p>
-                    <p className="mt-1 text-sm leading-6 text-slate-500">
-                      Search deliveries, couriers, and alerts across the live network.
+                    <p className="text-[11px] uppercase tracking-[0.24em] text-slate-400">Operations command</p>
+                    <p className="mt-1 text-sm leading-6 text-slate-600">
+                      Search deliveries, fleet activity, and incidents across the live network.
                     </p>
                   </div>
                 </div>
@@ -1542,14 +1561,14 @@ export default function AdminPage() {
                       value={searchQuery}
                       onChange={(event) => setSearchQuery(event.target.value)}
                       placeholder="Search orders, couriers, alerts..."
-                      className="h-12 rounded-2xl border-slate-200 bg-white pl-11 pr-4 text-slate-700 shadow-[0_10px_24px_-20px_rgba(15,23,42,0.45)] placeholder:text-slate-400"
+                      className="h-12 rounded-xl border-slate-300/70 bg-white/92 pl-11 pr-4 text-slate-800 shadow-[0_10px_24px_-22px_rgba(15,23,42,0.38)] placeholder:text-slate-400"
                     />
                   </div>
 
                   <div className="flex items-center gap-3">
                     <a
                       href="#alerts"
-                      className="relative flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-[0_10px_24px_-20px_rgba(15,23,42,0.4)]"
+                      className="relative flex h-12 w-12 items-center justify-center rounded-xl border border-slate-300/70 bg-white text-slate-700 shadow-[0_10px_24px_-22px_rgba(15,23,42,0.34)]"
                       aria-label="Notifications"
                     >
                       <Bell className="h-4.5 w-4.5" />
@@ -1557,8 +1576,8 @@ export default function AdminPage() {
                         <span className="absolute right-3 top-3 h-2.5 w-2.5 rounded-full bg-rose-500" />
                       ) : null}
                     </a>
-                    <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-2 shadow-[0_10px_24px_-20px_rgba(15,23,42,0.4)]">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-900 text-sm font-semibold text-white">
+                    <div className="flex items-center gap-3 rounded-xl border border-slate-300/70 bg-white px-3 py-2 shadow-[0_10px_24px_-22px_rgba(15,23,42,0.34)]">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-950 text-sm font-semibold text-white">
                         {userInitials}
                       </div>
                       <div className="min-w-0">
@@ -1576,16 +1595,16 @@ export default function AdminPage() {
                 id="overview"
                 className="grid gap-4 xl:grid-cols-[minmax(0,1.55fr)_minmax(320px,0.95fr)]"
               >
-                <div className="rounded-[32px] border border-slate-800/80 bg-[radial-gradient(circle_at_top_right,rgba(14,165,233,0.18),transparent_30%),linear-gradient(135deg,#0f172a_0%,#111827_52%,#1e293b_100%)] p-6 text-white shadow-[0_40px_100px_-56px_rgba(15,23,42,0.82)] sm:p-7">
+                <div className="rounded-[26px] border border-slate-800/90 bg-[radial-gradient(circle_at_top_right,rgba(56,189,248,0.12),transparent_28%),linear-gradient(135deg,#0a1220_0%,#0f172a_44%,#162233_100%)] p-6 text-white shadow-[0_34px_90px_-52px_rgba(15,23,42,0.82)] sm:p-7">
                   <div className="flex flex-wrap items-center gap-2">
-                    <div className="rounded-full border border-white/10 bg-white/10 px-3 py-1.5 text-xs font-medium tracking-[0.12em] text-slate-200">
-                      Operations command
+                    <div className="rounded-full border border-white/10 bg-white/8 px-3 py-1.5 text-xs font-medium tracking-[0.14em] text-slate-200">
+                      Network command
                     </div>
-                    <div className="rounded-full border border-white/10 bg-white/10 px-3 py-1.5 text-xs font-medium tracking-[0.08em] text-slate-300">
+                    <div className="rounded-full border border-white/10 bg-white/8 px-3 py-1.5 text-xs font-medium tracking-[0.08em] text-slate-300">
                       Snapshot {dashboard ? formatOrderTime(dashboard.generatedAt) : "pending"}
                     </div>
                     {recentDelivery ? (
-                      <div className="rounded-full border border-white/10 bg-white/10 px-3 py-1.5 text-xs font-medium tracking-[0.08em] text-slate-300">
+                      <div className="rounded-full border border-white/10 bg-white/8 px-3 py-1.5 text-xs font-medium tracking-[0.08em] text-slate-300">
                         Latest intake #{recentDelivery.id}
                       </div>
                     ) : null}
@@ -1595,25 +1614,25 @@ export default function AdminPage() {
                     <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
                       <div className="max-w-3xl">
                         <h1 className="text-4xl font-semibold tracking-tight text-white sm:text-[3rem]">
-                          Delivery operations at a glance
+                          Network command center
                         </h1>
                         <p className="mt-3 max-w-2xl text-base leading-7 text-slate-300">
-                          Professional oversight for dispatch health, courier coverage, live order flow, and intervention history.
+                          Live control over dispatch pressure, courier coverage, route aging, and intervention flow across the active delivery network.
                         </p>
                       </div>
 
                       <div className="flex flex-wrap gap-2">
-                        <div className="flex flex-wrap gap-2 rounded-[20px] border border-white/10 bg-white/8 p-1">
+                        <div className="flex flex-wrap gap-2 rounded-[16px] border border-white/10 bg-white/6 p-1">
                           {analyticsWindows.map((window) => (
                             <button
                               key={window.value}
                               type="button"
                               onClick={() => setAnalyticsWindow(window.value)}
                               className={cn(
-                                "rounded-2xl px-4 py-2.5 text-sm transition-colors",
+                                "rounded-xl px-4 py-2.5 text-sm font-medium transition-colors",
                                 analyticsWindow === window.value
                                   ? "bg-white text-slate-950"
-                                  : "text-slate-300 hover:bg-white/10 hover:text-white"
+                                  : "text-slate-300 hover:bg-white/8 hover:text-white"
                               )}
                             >
                               {window.label}
@@ -1625,7 +1644,7 @@ export default function AdminPage() {
                           variant="outline"
                           onClick={() => setRefreshTick((value) => value + 1)}
                           disabled={loading}
-                          className="border-white/10 bg-white/8 text-white hover:translate-y-0 hover:bg-white/12 hover:text-white hover:shadow-none"
+                          className="rounded-xl border-white/12 bg-white/6 text-white hover:translate-y-0 hover:bg-white/10 hover:text-white hover:shadow-none"
                         >
                           <RefreshCcw className={loading ? "h-4 w-4 animate-spin" : "h-4 w-4"} />
                           Refresh
@@ -1640,24 +1659,24 @@ export default function AdminPage() {
                     </div>
 
                     <div className="grid gap-3 sm:grid-cols-3">
-                      <div className="rounded-[24px] border border-white/10 bg-white/8 p-4">
+                      <div className="rounded-[18px] border border-white/10 bg-slate-950/24 p-4">
                         <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Posture</p>
                         <div className="mt-3 flex items-center gap-3">
-                          <div className={cn("rounded-2xl p-2.5", postureClasses.icon)}>
+                          <div className={cn("rounded-xl p-2.5", postureClasses.icon)}>
                             <ShieldCheck className="h-4.5 w-4.5" />
                           </div>
                           <p className="text-xl font-semibold text-white">{operatingPosture.label}</p>
                         </div>
                         <p className="mt-3 text-sm leading-6 text-slate-300">{operatingPosture.summary}</p>
                       </div>
-                      <div className="rounded-[24px] border border-white/10 bg-white/8 p-4">
+                      <div className="rounded-[18px] border border-white/10 bg-slate-950/24 p-4">
                         <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Delivery flow</p>
                         <p className="mt-3 text-3xl font-semibold tracking-tight text-white">{activeDeliveries.length}</p>
                         <p className="mt-2 text-sm leading-6 text-slate-300">
                           Active routes with {pendingDeliveries.length} waiting on dispatch.
                         </p>
                       </div>
-                      <div className="rounded-[24px] border border-white/10 bg-white/8 p-4">
+                      <div className="rounded-[18px] border border-white/10 bg-slate-950/24 p-4">
                         <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Coverage</p>
                         <p className="mt-3 text-3xl font-semibold tracking-tight text-white">{formatPercent(coverageRate)}</p>
                         <p className="mt-2 text-sm leading-6 text-slate-300">
@@ -1709,12 +1728,12 @@ export default function AdminPage() {
 
               {error ? <ErrorState description={error} /> : null}
               {actionError ? (
-                <div className="rounded-[24px] border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-700">
+                <div className="rounded-[20px] border border-rose-200/80 bg-rose-50/90 px-5 py-4 text-sm text-rose-700">
                   {actionError}
                 </div>
               ) : null}
               {actionMessage ? (
-                <div className="rounded-[24px] border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-700">
+                <div className="rounded-[20px] border border-emerald-200/80 bg-emerald-50/90 px-5 py-4 text-sm text-emerald-700">
                   {actionMessage}
                 </div>
               ) : null}
@@ -1798,10 +1817,10 @@ export default function AdminPage() {
                             type="button"
                             onClick={() => setStatusFilter(filter.value)}
                             className={cn(
-                              "rounded-full border px-3 py-1.5 text-xs transition-colors",
+                              "rounded-full border px-3 py-1.5 text-xs font-medium tracking-[0.12em] transition-colors",
                               statusFilter === filter.value
-                                ? "border-slate-900 bg-slate-900 text-white"
-                                : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
+                                ? "border-slate-950 bg-slate-950 text-white"
+                                : "border-slate-300/70 bg-slate-50 text-slate-700 hover:border-slate-400 hover:bg-slate-100"
                             )}
                           >
                             {filter.label}
@@ -1828,8 +1847,8 @@ export default function AdminPage() {
                                 <tr
                                   key={delivery.id}
                                   className={cn(
-                                    "align-top text-sm text-slate-700 transition-colors hover:bg-slate-50/70",
-                                    selectedDeliveryId === delivery.id ? "bg-sky-50/70" : ""
+                                    "align-top text-sm text-slate-700 transition-colors hover:bg-slate-950/[0.025]",
+                                    selectedDeliveryId === delivery.id ? "bg-slate-950/[0.05]" : ""
                                   )}
                                 >
                                   <td className="border-t border-slate-200/80 px-5 py-5 sm:px-6">
@@ -1869,7 +1888,7 @@ export default function AdminPage() {
                           </table>
                         </div>
                       ) : (
-                        <div className="rounded-[24px] border border-dashed border-slate-200 bg-slate-50/80 p-5 text-sm leading-6 text-slate-500">
+                        <div className="rounded-[18px] border border-dashed border-slate-300/70 bg-slate-50/70 p-5 text-sm leading-6 text-slate-500">
                           No deliveries match the current search and status filters.
                         </div>
                       )}
@@ -1893,7 +1912,7 @@ export default function AdminPage() {
                             return (
                               <div
                                 key={item.id}
-                                className={cn("rounded-[24px] border p-4", styles.panel)}
+                                className={cn("rounded-[18px] border p-4", styles.panel)}
                               >
                                 <div className="flex items-start justify-between gap-3">
                                   <div className="min-w-0">
@@ -1910,7 +1929,7 @@ export default function AdminPage() {
                                     </p>
                                     <p className="mt-2 text-sm leading-6 text-slate-600">{item.summary}</p>
                                   </div>
-                                  <div className={cn("rounded-2xl p-2.5", styles.icon)}>
+                                  <div className={cn("rounded-xl p-2.5", styles.icon)}>
                                     <AlertTriangle className="h-4.5 w-4.5" />
                                   </div>
                                 </div>
@@ -1934,7 +1953,7 @@ export default function AdminPage() {
                             );
                           })
                         ) : (
-                          <div className="rounded-[24px] border border-dashed border-slate-200 bg-slate-50/80 p-5 text-sm leading-6 text-slate-500">
+                          <div className="rounded-[18px] border border-dashed border-slate-300/70 bg-slate-50/70 p-5 text-sm leading-6 text-slate-500">
                             No open escalations. Dispatch, route aging, and inbox pressure are all inside tolerance.
                           </div>
                         )}
@@ -1985,7 +2004,7 @@ export default function AdminPage() {
                                     className={cn(
                                       "rounded-full border px-3 py-1 text-xs",
                                       notification.readAt
-                                        ? "border-slate-200 bg-white text-slate-500"
+                                        ? "border-slate-300/70 bg-white text-slate-500"
                                         : notificationPillClasses(tone)
                                     )}
                                   >
@@ -2007,7 +2026,7 @@ export default function AdminPage() {
                                         variant="outline"
                                         onClick={() => handleMarkNotificationRead(notification.id)}
                                         disabled={actionState === "reading"}
-                                        className={cn(adminOutlineButtonClassName, "h-8 rounded-full px-3")}
+                                        className={cn(adminOutlineButtonClassName, "h-8 rounded-xl px-3")}
                                       >
                                         Mark read
                                       </Button>
@@ -2018,7 +2037,7 @@ export default function AdminPage() {
                             );
                           })
                         ) : (
-                          <div className="rounded-[24px] border border-dashed border-slate-200 bg-slate-50/80 p-5 text-sm leading-6 text-slate-500">
+                          <div className="rounded-[18px] border border-dashed border-slate-300/70 bg-slate-50/70 p-5 text-sm leading-6 text-slate-500">
                             No alerts were created inside the current analytics window.
                           </div>
                         )}
@@ -2088,7 +2107,7 @@ export default function AdminPage() {
                             </div>
                           ))
                         ) : (
-                          <div className="rounded-[24px] border border-dashed border-slate-200 bg-slate-50/80 p-5 text-sm leading-6 text-slate-500">
+                          <div className="rounded-[18px] border border-dashed border-slate-300/70 bg-slate-50/70 p-5 text-sm leading-6 text-slate-500">
                             No drivers are currently in motion. Open routes will appear here once couriers accept work.
                           </div>
                         )}
@@ -2146,7 +2165,7 @@ export default function AdminPage() {
                             </div>
                           ))
                         ) : (
-                          <div className="rounded-[24px] border border-dashed border-slate-200 bg-slate-50/80 p-5 text-sm leading-6 text-slate-500">
+                          <div className="rounded-[18px] border border-dashed border-slate-300/70 bg-slate-50/70 p-5 text-sm leading-6 text-slate-500">
                             No activity has been logged yet. Status transitions will appear here as deliveries move.
                           </div>
                         )}
@@ -2162,8 +2181,8 @@ export default function AdminPage() {
         </div>
       </div>
 
-      <DialogContent className="w-[min(96vw,82rem)] max-h-[92vh] overflow-hidden border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-0 text-slate-900 shadow-[0_44px_120px_-70px_rgba(15,23,42,0.5)]">
-        <div className="border-b border-slate-200 bg-white/88 px-6 py-5 backdrop-blur sm:px-7">
+      <DialogContent className="w-[min(96vw,82rem)] max-h-[92vh] overflow-hidden border border-slate-300/70 bg-[linear-gradient(180deg,#f8fafc_0%,#ffffff_100%)] p-0 text-slate-900 shadow-[0_36px_110px_-66px_rgba(15,23,42,0.55)]">
+        <div className="border-b border-slate-200/85 bg-[linear-gradient(180deg,rgba(248,250,252,0.94),rgba(255,255,255,0.82))] px-6 py-5 backdrop-blur sm:px-7">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <DialogHeader className="max-w-3xl">
               <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Driver locator</p>
@@ -2174,7 +2193,7 @@ export default function AdminPage() {
               </DialogDescription>
             </DialogHeader>
             <div className="flex flex-wrap gap-2">
-              <div className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600">
+              <div className="rounded-full border border-slate-300/70 bg-white px-4 py-2 text-sm text-slate-600">
                 {trackableDriverDeliveries.length} trackable drivers
               </div>
               <Button
@@ -2193,7 +2212,7 @@ export default function AdminPage() {
 
         <div className="max-h-[calc(92vh-136px)] overflow-y-auto px-6 pb-6 pt-5 sm:px-7">
           {driverLocatorError ? (
-            <div className="mb-5 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm leading-6 text-rose-700">
+            <div className="mb-5 rounded-[18px] border border-rose-200/80 bg-rose-50/90 p-4 text-sm leading-6 text-rose-700">
               {driverLocatorError}
             </div>
           ) : null}
@@ -2204,7 +2223,7 @@ export default function AdminPage() {
                 (_, index) => (
                   <div
                     key={`driver-locator-skeleton-${index}`}
-                    className="h-[520px] animate-pulse rounded-[30px] bg-slate-200/80"
+                    className="h-[520px] animate-pulse rounded-[22px] bg-slate-200/80"
                   />
                 )
               )}
@@ -2242,25 +2261,25 @@ export default function AdminPage() {
                     <div className="mt-5 grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
                       <div className="space-y-4">
                         <div className="grid gap-3 sm:grid-cols-2">
-                          <div className={cn("rounded-[22px] border p-4", styles.panel)}>
+                          <div className={cn("rounded-[18px] border p-4", styles.panel)}>
                             <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">ETA</p>
                             <p className="mt-2 text-lg font-semibold text-slate-950">
                               {formatEtaSeconds(record.tracking.estimatedEtaSeconds)}
                             </p>
                           </div>
-                          <div className={cn("rounded-[22px] border p-4", styles.panel)}>
+                          <div className={cn("rounded-[18px] border p-4", styles.panel)}>
                             <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Remaining</p>
                             <p className="mt-2 text-lg font-semibold text-slate-950">
                               {formatDistanceKm(record.tracking.remainingDistanceKm)}
                             </p>
                           </div>
-                          <div className={cn("rounded-[22px] border p-4", styles.panel)}>
+                          <div className={cn("rounded-[18px] border p-4", styles.panel)}>
                             <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Progress</p>
                             <p className="mt-2 text-lg font-semibold text-slate-950">
                               {formatPercent(record.tracking.progress)}
                             </p>
                           </div>
-                          <div className={cn("rounded-[22px] border p-4", styles.panel)}>
+                          <div className={cn("rounded-[18px] border p-4", styles.panel)}>
                             <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Last movement</p>
                             <p className="mt-2 text-lg font-semibold text-slate-950">{formatMinutes(idleMinutes)}</p>
                           </div>
@@ -2281,7 +2300,7 @@ export default function AdminPage() {
                           <p className="mt-4 text-sm leading-6 text-slate-600">
                             {describeActivity(record.latestActivity)}
                           </p>
-                          <div className="mt-4 rounded-[18px] border border-slate-200 bg-white p-3 text-sm text-slate-600">
+                          <div className="mt-4 rounded-[16px] border border-slate-200/80 bg-white p-3 text-sm text-slate-600">
                             <p className="truncate">{record.delivery.pickupAddress}</p>
                             <p className="mt-1 truncate text-slate-400">{record.delivery.dropoffAddress}</p>
                           </div>
@@ -2310,7 +2329,7 @@ export default function AdminPage() {
               })}
             </div>
           ) : (
-            <div className="rounded-[30px] border border-dashed border-slate-200 bg-slate-50/80 p-6 text-sm leading-6 text-slate-600">
+            <div className="rounded-[22px] border border-dashed border-slate-300/70 bg-slate-50/70 p-6 text-sm leading-6 text-slate-600">
               {activeDeliveries.length
                 ? "There are active routes, but none currently have a courier attached, so there is no live GPS position to locate."
                 : "No drivers are currently in motion. Once a courier accepts a route, GPS location and activity will appear here."}
@@ -2329,11 +2348,11 @@ export default function AdminPage() {
       >
         <SheetContent
           side="right"
-          className="w-[96vw] max-w-[44rem] overflow-y-auto border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-0 text-slate-900"
+          className="w-[96vw] max-w-[44rem] overflow-y-auto border-slate-300/70 bg-[linear-gradient(180deg,#f8fafc_0%,#ffffff_100%)] p-0 text-slate-900"
         >
           {selectedDelivery ? (
             <div className="min-h-full">
-              <div className="border-b border-slate-200 bg-white/88 px-6 py-5">
+              <div className="border-b border-slate-200/85 bg-[linear-gradient(180deg,rgba(248,250,252,0.94),rgba(255,255,255,0.82))] px-6 py-5">
                 <SheetHeader className="mb-0 pr-10">
                   <div className="flex flex-wrap items-center gap-2">
                     <div className={cn(adminChipClassName, "py-1")}>
@@ -2398,13 +2417,13 @@ export default function AdminPage() {
                 </div>
 
                 {selectedDeliveryError ? (
-                  <div className="rounded-[24px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                  <div className="rounded-[18px] border border-rose-200/80 bg-rose-50/90 px-4 py-3 text-sm text-rose-700">
                     {selectedDeliveryError}
                   </div>
                 ) : null}
 
                 {selectedDeliveryLoading ? (
-                  <div className="h-[260px] animate-pulse rounded-[24px] bg-slate-200/80" />
+                  <div className="h-[260px] animate-pulse rounded-[20px] bg-slate-200/80" />
                 ) : selectedDeliveryTracking ? (
                   <DriverRouteMap tracking={selectedDeliveryTracking} />
                 ) : null}
@@ -2418,7 +2437,7 @@ export default function AdminPage() {
                           Pending deliveries need a real courier assignment before they can move forward.
                         </p>
                       </div>
-                      <div className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs text-amber-700">
+                      <div className="rounded-full border border-amber-200/80 bg-amber-50 px-3 py-1 text-xs text-amber-700">
                         Pending
                       </div>
                     </div>
@@ -2446,7 +2465,7 @@ export default function AdminPage() {
                           value={actionNote}
                           onChange={(event) => setActionNote(event.target.value)}
                           placeholder="Optional note explaining why this assignment was made."
-                          className="min-h-[110px] border-slate-200 bg-white text-slate-700 placeholder:text-slate-400"
+                          className="min-h-[110px] rounded-xl border-slate-300/70 bg-white text-slate-700 placeholder:text-slate-400"
                         />
                       </div>
 
@@ -2469,7 +2488,7 @@ export default function AdminPage() {
                           Move this order to the next allowed backend status and record an admin note.
                         </p>
                       </div>
-                      <div className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs text-emerald-700">
+                      <div className="rounded-full border border-emerald-200/80 bg-emerald-50 px-3 py-1 text-xs text-emerald-700">
                         Next: {formatStatusLabel(selectedDeliveryNextStatus)}
                       </div>
                     </div>
@@ -2481,7 +2500,7 @@ export default function AdminPage() {
                           value={actionNote}
                           onChange={(event) => setActionNote(event.target.value)}
                           placeholder={`Optional note for moving this delivery to ${formatStatusLabel(selectedDeliveryNextStatus)}.`}
-                          className="min-h-[110px] border-slate-200 bg-white text-slate-700 placeholder:text-slate-400"
+                          className="min-h-[110px] rounded-xl border-slate-300/70 bg-white text-slate-700 placeholder:text-slate-400"
                         />
                       </div>
 
@@ -2498,7 +2517,7 @@ export default function AdminPage() {
                     </div>
                   </div>
                 ) : (
-                  <div className="rounded-[24px] border border-slate-200 bg-slate-50/80 p-4 text-sm leading-6 text-slate-600">
+                  <div className="rounded-[18px] border border-slate-300/70 bg-slate-50/70 p-4 text-sm leading-6 text-slate-600">
                     This delivery is already delivered. Use the timeline below for audit review.
                   </div>
                 )}
@@ -2540,7 +2559,7 @@ export default function AdminPage() {
                         </div>
                       ))
                     ) : (
-                      <div className="rounded-[22px] border border-dashed border-slate-200 bg-slate-50/80 p-4 text-sm leading-6 text-slate-600">
+                      <div className="rounded-[18px] border border-dashed border-slate-300/70 bg-slate-50/70 p-4 text-sm leading-6 text-slate-600">
                         No history is available for this delivery yet.
                       </div>
                     )}

@@ -12,6 +12,7 @@ import { useAuthStore } from "@/store/auth-store";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getAdminAppUrl } from "@/lib/admin-url";
 import { formatCurrency, formatOrderTime } from "@/lib/format";
 import { apiClient } from "@/services/api/client";
 import { type Order } from "@/types";
@@ -194,7 +195,7 @@ export default function OrdersPage() {
             <Button asChild variant="outline">
               <Link
                 href={
-                  user.role === "driver" ? "/driver" : user.role === "owner" ? "/owner" : "/admin"
+                  user.role === "driver" ? "/driver" : user.role === "owner" ? "/owner" : getAdminAppUrl()
                 }
               >
                 Open your workspace
